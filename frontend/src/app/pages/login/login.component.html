@@ -1,0 +1,132 @@
+<p-toast position="top-right"></p-toast>
+
+<div class="login-page">
+
+  <!-- Animated background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow--green"></div>
+  <div class="bg-glow bg-glow--blue"></div>
+
+  <!-- Floating status ticker -->
+  <div class="sys-ticker">
+    <span class="sys-ticker__dot"></span>
+    <span class="sys-ticker__text">All systems operational &nbsp;·&nbsp; Cluster ready &nbsp;·&nbsp; SSO Keycloak</span>
+  </div>
+
+  <div class="login-center">
+
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand__icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.6">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h1 class="brand__name">DevBoard</h1>
+      <p class="brand__sub">// ci/cd &nbsp;·&nbsp; monitoring &nbsp;·&nbsp; infrastructure</p>
+    </div>
+
+    <!-- Login card -->
+    <div class="login-card">
+
+      <!-- Card top accent line -->
+      <div class="card-accent"></div>
+
+      <div class="card-body">
+
+        <h2 class="card-title">Connexion</h2>
+        <p class="card-desc">Accédez à votre tableau de bord</p>
+
+        <!-- Email field -->
+        <div class="field">
+          <label class="field__label" for="email-input">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Adresse email
+          </label>
+          <input
+            pInputText
+            id="email-input"
+            type="email"
+            [(ngModel)]="email"
+            placeholder="wassim@devops.com"
+            class="field__input"
+            [class.field__input--error]="submitted && !email"
+            (keyup.enter)="login()"
+            autocomplete="email"
+          />
+          <small *ngIf="submitted && !email" class="field__error">
+            <i class="pi pi-exclamation-circle"></i> L'email est requis
+          </small>
+        </div>
+
+        <!-- Password field -->
+        <div class="field">
+          <div class="field__row">
+            <label class="field__label" for="pass-input">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              Mot de passe
+            </label>
+            <a href="#" class="field__forgot">Oublié ?</a>
+          </div>
+          <input
+            pInputText
+            id="pass-input"
+            type="password"
+            [(ngModel)]="password"
+            placeholder="••••••••••••"
+            class="field__input"
+            [class.field__input--error]="submitted && !password"
+            (keyup.enter)="login()"
+            autocomplete="current-password"
+          />
+          <small *ngIf="submitted && !password" class="field__error">
+            <i class="pi pi-exclamation-circle"></i> Le mot de passe est requis
+          </small>
+        </div>
+
+        <!-- Remember me -->
+        <div class="remember-row">
+          <input type="checkbox" id="remember" [(ngModel)]="rememberMe" />
+          <label for="remember">Rester connecté</label>
+        </div>
+
+        <!-- Login button -->
+        <button
+          class="btn-login"
+          [class.btn-login--loading]="loading"
+          (click)="login()"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading" class="btn-login__content">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Se connecter
+          </span>
+          <span *ngIf="loading" class="btn-login__content">
+            <span class="btn-spinner"></span>
+            Authentification...
+          </span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Terminal hint -->
+    <p class="terminal-hint">
+      <span class="terminal-hint__prompt">$</span>
+      ssh -i ~/.ssh/id_rsa admin&#64;devboard.io
+    </p>
+
+  </div>
+</div>

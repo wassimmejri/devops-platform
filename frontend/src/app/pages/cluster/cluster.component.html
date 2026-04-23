@@ -1,0 +1,168 @@
+<p-toast></p-toast>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--green"></div>
+<div class="bg-glow bg-glow--blue"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div style="display:flex; align-items:center; gap:14px">
+      <button class="back-btn" routerLink="/dashboard">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="page-header__title">Cluster Kubernetes</h1>
+        <p class="page-header__sub">{{ nodes.length }} nœud(s) · {{ pods.length }} pod(s)</p>
+      </div>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <!-- Toggle auto‑refresh -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <p-checkbox [(ngModel)]="autoRefresh" [binary]="true" (onChange)="toggleAutoRefresh()" inputId="clusterAutoRefresh"></p-checkbox>
+        <label for="clusterAutoRefresh" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7a9a8a; cursor: pointer;">
+          Auto‑refresh ({{ refreshInterval }}s)
+        </label>
+      </div>
+      <button class="back-btn" (click)="loadAll()">
+        <i class="pi pi-refresh"></i> Rafraîchir
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-mini">
+      <div class="stat-mini__label">Nœuds</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ nodes.length }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Total Pods</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ pods.length }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Running</div>
+      <div class="stat-mini__value stat-mini__value--green">{{ runningPods }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Pending</div>
+      <div class="stat-mini__value stat-mini__value--yellow">{{ pendingPods }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Failed</div>
+      <div class="stat-mini__value stat-mini__value--red">{{ failedPods }}</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loadingNodes && loadingPods" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+  </div>
+
+  <!-- Nodes Panel -->
+  <div *ngIf="!loadingNodes || !loadingPods" class="panel">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-server panel__title-icon"></i>
+        Nœuds du cluster
+      </h3>
+      <span class="live-badge" *ngIf="!loadingNodes">
+        <span class="live-badge__dot"></span>
+        {{ nodes.length }} actif(s)
+      </span>
+    </div>
+
+    <!-- Nodes list -->
+    <div class="node-list">
+      <div class="node-item" *ngFor="let node of nodes">
+        <div class="node-left">
+          <div class="node-dot" [class.node-dot--ready]="node.status === 'Ready'" [class.node-dot--error]="node.status !== 'Ready'"></div>
+          <div>
+            <div class="node-name">{{ node.name }}</div>
+            <div class="node-role">
+              <span *ngFor="let role of node.roles" class="node-role__badge">{{ role }}</span>
+              <span *ngIf="!node.roles?.length" class="node-role__badge node-role__badge--worker">worker</span>
+            </div>
+          </div>
+        </div>
+        <div class="node-right">
+          <span class="node-badge node-badge--cpu">
+            {{ getNodeUsage(node).cpuUsage?.toFixed(1) || '—' }}% 
+            <span style="opacity:0.6">/ {{ node.cpu }} cores</span>
+          </span>
+          <span class="node-badge node-badge--ram">
+  {{ getNodeUsage(node).ramUsage?.toFixed(1) || '—' }}% 
+  <span style="opacity:0.6">/ {{ getNodeRamGB(node) }} GB</span>
+</span>
+          <p-tag [value]="node.status" [severity]="getNodeSeverity(node.status)"></p-tag>
+        </div>
+      </div>
+      <div *ngIf="loadingNodes" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+    </div>
+  </div>
+
+  <!-- Pods Panel -->
+  <div class="panel panel--wide" style="margin-top: 20px;">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-box panel__title-icon"></i>
+        Pods
+      </h3>
+      <span class="live-badge" *ngIf="!loadingPods">
+        <span class="live-badge__dot"></span>
+        {{ pods.length }} au total
+      </span>
+    </div>
+
+    <!-- Filter row -->
+    <div class="filter-row">
+      <input type="text" placeholder="Rechercher un pod..." [(ngModel)]="podSearch" class="filter-input" />
+      <select [(ngModel)]="podStatusFilter" class="filter-select">
+        <option value="">Tous les statuts</option>
+        <option value="Running">Running</option>
+        <option value="Pending">Pending</option>
+        <option value="Failed">Failed</option>
+      </select>
+    </div>
+
+    <!-- Pod list -->
+    <div class="pod-list">
+      <div class="pod-item" *ngFor="let pod of filteredPods">
+        <div class="pod-dot" [class.pod-dot--running]="pod.status === 'Running'"
+                             [class.pod-dot--pending]="pod.status === 'Pending'"
+                             [class.pod-dot--failed]="pod.status === 'Failed'"></div>
+        <div class="pod-info">
+          <div class="pod-name">{{ pod.name }}</div>
+          <div class="pod-ns">{{ pod.namespace }}</div>
+        </div>
+        <div class="pod-meta">
+          <span class="pod-restarts" *ngIf="pod.restarts > 0">
+            <i class="pi pi-exclamation-circle"></i> {{ pod.restarts }}
+          </span>
+          <p-tag [value]="pod.status" [severity]="getStatusSeverity(pod.status)"></p-tag>
+          <button class="pod-action" (click)="viewLogs(pod)" title="Voir les logs">
+            <i class="pi pi-align-left"></i>
+          </button>
+          <button class="pod-action" (click)="restartPod(pod)" title="Redémarrer">
+            <i class="pi pi-refresh"></i>
+          </button>
+        </div>
+      </div>
+      <div *ngIf="loadingPods" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+      <div *ngIf="!loadingPods && pods.length === 0" class="empty-state">
+        <i class="pi pi-box"></i>
+        <p>Aucun pod trouvé</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Logs -->
+<p-dialog [header]="'Logs — ' + (selectedPod?.name || '')"
+          [(visible)]="showLogsDialog" [modal]="true" [style]="{width: '820px'}">
+  <div *ngIf="loadingLogs" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+  </div>
+  <pre *ngIf="!loadingLogs" class="logs-pre">{{ podLogs }}</pre>
+</p-dialog>

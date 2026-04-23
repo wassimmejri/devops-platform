@@ -1,0 +1,311 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap');
+
+// ══════════════════════════════════════════════════════════
+// DESIGN TOKENS — Glassmorphism DevOps (Cyan/Blue Edition)
+// ══════════════════════════════════════════════════════════
+
+// ── Backgrounds ───────────────────────────────────────────
+$bg-deep:      #020810;          // fond principal quasi-noir
+$bg-card:      rgba(8, 18, 38, 0.75);   // carte glass
+$bg-card-solid:#08122a;          // fallback sans blur
+$bg-input:     rgba(4, 10, 24, 0.85);  // champs de saisie
+$bg-item:      rgba(0, 180, 255, 0.04); // ligne hover table
+$bg-glass:     rgba(10, 25, 55, 0.55); // surface glassmorphism principale
+$bg-glass-hover: rgba(14, 32, 68, 0.70);
+
+// ── Borders ───────────────────────────────────────────────
+$border-dim:   rgba(0, 140, 255, 0.10);
+$border-mid:   rgba(0, 180, 255, 0.18);
+$border-bright:rgba(0, 200, 255, 0.35);
+
+// ── Accent Cyan / Blue ────────────────────────────────────
+$cyan-bright:  #00e5ff;   // accent vif
+$cyan-mid:     #00b8d9;   // cyan normal
+$cyan-muted:   #0288a8;   // cyan atténué
+$cyan-dim:     #015a72;   // cyan sombre
+$blue-neon:    #2979ff;   // bleu électrique
+$blue-mid:     #1565c0;
+$blue-soft:    rgba(41, 121, 255, 0.15);
+
+// ── Status colors ─────────────────────────────────────────
+$status-success: #00e676;
+$status-warn:    #ffab00;
+$status-error:   #ff5252;
+$status-info:    $cyan-bright;
+
+// ── Text ─────────────────────────────────────────────────
+$text-primary: #e0f4ff;
+$text-muted:   #7ab0cc;
+$text-dim:     #2e5a72;
+
+// ── Fonts ─────────────────────────────────────────────────
+$mono:         'JetBrains Mono', monospace;
+$display:      'Syne', sans-serif;
+
+// ══════════════════════════════════════════════════════════
+// GLASS MIXINS
+// ══════════════════════════════════════════════════════════
+
+@mixin glass-surface($opacity: 0.55, $blur: 16px) {
+  background: rgba(8, 20, 48, $opacity);
+  backdrop-filter: blur($blur) saturate(160%);
+  -webkit-backdrop-filter: blur($blur) saturate(160%);
+  border: 1px solid $border-dim;
+}
+
+@mixin glass-card {
+  @include glass-surface(0.60, 18px);
+  border-radius: 16px;
+  border-color: $border-mid;
+}
+
+@mixin cyan-glow($strength: 0.25) {
+  box-shadow: 0 0 18px rgba(0, 200, 255, $strength),
+              0 0 40px rgba(0, 150, 255, calc($strength * 0.5));
+}
+
+@mixin neon-border {
+  border-color: $border-bright;
+  @include cyan-glow(0.2);
+}
+
+// ══════════════════════════════════════════════════════════
+// PLACEHOLDERS
+// ══════════════════════════════════════════════════════════
+
+// ── Page shell ────────────────────────────────────────────
+%page-shell {
+  font-family: $display;
+  min-height: 100vh;
+  background: $bg-deep;
+  color: $text-primary;
+  padding: 24px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+// ── Background grid ───────────────────────────────────────
+%bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 180, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 180, 255, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+// Halos de fond décoratifs
+%bg-halos {
+  &::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 120, 255, 0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  &::after {
+    content: '';
+    position: fixed;
+    bottom: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0, 200, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+// ── Glass panel ───────────────────────────────────────────
+%panel {
+  @include glass-card;
+  padding: 20px;
+}
+
+// ── Page header ───────────────────────────────────────────
+%page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+// ── Stat card ─────────────────────────────────────────────
+%stat-card {
+  @include glass-surface(0.55, 14px);
+  border-radius: 14px;
+  border-color: $border-mid;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+
+  &:hover {
+    border-color: $border-bright;
+    @include cyan-glow(0.15);
+  }
+}
+
+// ── Item row ──────────────────────────────────────────────
+%item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: $bg-item;
+  border: 1px solid $border-dim;
+  border-radius: 10px;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: rgba(0, 180, 255, 0.07);
+    border-color: $border-mid;
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────
+%action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  @include glass-surface(0.50, 8px);
+  border-radius: 9px;
+  padding: 9px 16px;
+  font-family: $display;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-muted;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: $border-bright;
+    color: $cyan-bright;
+    @include cyan-glow(0.15);
+  }
+}
+
+%action-btn-primary {
+  @extend %action-btn;
+  background: rgba(0, 180, 255, 0.12);
+  border-color: rgba(0, 180, 255, 0.30);
+  color: $cyan-mid;
+
+  &:hover {
+    background: rgba(0, 180, 255, 0.20);
+    border-color: $border-bright;
+    color: $cyan-bright;
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25);
+  }
+}
+
+%action-btn-danger {
+  @extend %action-btn;
+  &:hover {
+    border-color: rgba(255, 82, 82, 0.40);
+    color: $status-error;
+    box-shadow: 0 0 12px rgba(255, 82, 82, 0.15);
+  }
+}
+
+// ── Input ────────────────────────────────────────────────
+%input-base {
+  font-family: $mono;
+  font-size: 12px;
+  @include glass-surface(0.80, 6px);
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: $text-primary;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder { color: $text-dim; }
+  &:focus {
+    border-color: rgba(0, 200, 255, 0.40);
+    box-shadow: 0 0 0 2px rgba(0, 200, 255, 0.08),
+                0 0 12px rgba(0, 180, 255, 0.10);
+  }
+}
+
+// ── Badge / Tag ───────────────────────────────────────────
+%mono-badge {
+  font-family: $mono;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+// ══════════════════════════════════════════════════════════
+// ANIMATIONS
+// ══════════════════════════════════════════════════════════
+
+@keyframes pulse-cyan {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 200, 255, 0.4); }
+  50%       { opacity: 0.65; box-shadow: 0 0 0 6px rgba(0, 200, 255, 0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+// ══════════════════════════════════════════════════════════
+// MIXINS UTILITAIRES
+// ══════════════════════════════════════════════════════════
+
+@mixin page-content {
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.3s ease;
+}
+
+@mixin status-dot($color) {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: $color;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px #{$color}99;
+  animation: pulse-cyan 2.5s ease-in-out infinite;
+}
+
+@mixin card-hover {
+  transition: transform 0.2s, border-color 0.25s, box-shadow 0.25s;
+  &:hover {
+    transform: translateY(-2px);
+    border-color: $border-bright;
+    @include cyan-glow(0.15);
+  }
+}
+
+@mixin section-title {
+  font-family: $display;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: $cyan-muted;
+}

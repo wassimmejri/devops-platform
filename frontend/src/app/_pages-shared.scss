@@ -1,0 +1,670 @@
+@import 'styles/theme';
+
+:host { display: block; }
+
+// ══════════════════════════════════════════════════════════
+// BACKGROUND
+// ══════════════════════════════════════════════════════════
+.bg-grid {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,180,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,180,255,0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none; z-index: 0;
+}
+
+.bg-glow {
+  position: fixed; border-radius: 50%;
+  filter: blur(110px); pointer-events: none; z-index: 0;
+  &--green { width: 600px; height: 600px; background: rgba(0,150,255,0.055); top: -200px; right: -150px; }
+  &--blue  { width: 400px; height: 400px; background: rgba(0,200,255,0.04); bottom: -100px; left: -100px; }
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGE
+// ══════════════════════════════════════════════════════════
+.page {
+  @include page-content();
+  padding: 24px;
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGE HEADER
+// ══════════════════════════════════════════════════════════
+.page-header {
+  @extend %page-header;
+
+  &__title {
+    font-family: $display;
+    font-size: 22px;
+    font-weight: 800;
+    color: $text-primary;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+
+  &__sub {
+    font-family: $mono;
+    font-size: 12px;
+    color: $text-dim;
+    margin-top: 4px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// BACK / ACTION BUTTONS
+// ══════════════════════════════════════════════════════════
+.back-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  @include glass-surface(0.55, 8px);
+  border-radius: 9px; padding: 9px 14px;
+  font-family: $display; font-size: 13px; font-weight: 600;
+  color: $text-muted; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: $border-bright;
+    color: $cyan-bright;
+    @include cyan-glow(0.15);
+  }
+
+  &:disabled { opacity: 0.45; pointer-events: none; }
+}
+
+.add-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,180,255,0.12);
+  border: 1px solid rgba(0,180,255,0.30);
+  border-radius: 10px; padding: 10px 18px;
+  font-family: $display; font-size: 13px; font-weight: 700;
+  color: $cyan-mid; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    background: rgba(0,200,255,0.20);
+    border-color: $border-bright;
+    color: $cyan-bright;
+    box-shadow: 0 0 14px rgba(0,200,255,0.20);
+  }
+
+  i { font-size: 13px; }
+}
+
+// ══════════════════════════════════════════════════════════
+// STATS ROW
+// ══════════════════════════════════════════════════════════
+.stats-row {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+  @include page-content();
+}
+
+.stat-mini {
+  @include glass-surface(0.60, 14px);
+  border-radius: 14px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+
+  &:hover {
+    border-color: $border-bright;
+    @include cyan-glow(0.12);
+  }
+
+  // Barre de couleur en haut
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, $cyan-dim, $cyan-mid);
+  }
+
+  &__label {
+    font-family: $mono;
+    font-size: 10px;
+    color: $cyan-dim;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+
+  &__value {
+    font-family: $display;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+
+    &--green  { color: $status-success; text-shadow: 0 0 12px rgba(0,230,118,0.3); }
+    &--yellow { color: $status-warn; text-shadow: 0 0 12px rgba(255,171,0,0.3); }
+    &--red    { color: $status-error; text-shadow: 0 0 12px rgba(255,82,82,0.3); }
+    &--white  { color: $text-primary; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// PANELS
+// ══════════════════════════════════════════════════════════
+.panel {
+  @include glass-surface(0.65, 18px);
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.25s;
+
+  &:hover { border-color: $border-mid; }
+
+  &__header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+
+  &__title {
+    display: flex; align-items: center; gap: 8px;
+    font-family: $display; font-size: 15px; font-weight: 700;
+    color: $text-primary; margin: 0;
+
+    &-icon { color: $cyan-dim; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LIVE BADGE
+// ══════════════════════════════════════════════════════════
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(0,230,118,0.07);
+  border: 1px solid rgba(0,230,118,0.14);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-family: $mono; font-size: 10px; color: rgba(0,200,100,0.65);
+
+  &__dot {
+    width: 6px; height: 6px;
+    background: $status-success; border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,230,118,0.5);
+    animation: pulse-cyan 2.5s infinite;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════════
+.filter-row {
+  display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+
+.filter-input,
+.filter-select {
+  font-family: $mono; font-size: 12px;
+  @include glass-surface(0.80, 6px);
+  border-radius: 9px; padding: 9px 12px;
+  color: $text-primary; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  flex: 1; min-width: 0;
+
+  &::placeholder { color: $text-dim; }
+  &:focus {
+    border-color: rgba(0,200,255,0.35);
+    box-shadow: 0 0 0 2px rgba(0,200,255,0.07);
+  }
+}
+
+.filter-select {
+  appearance: none; cursor: pointer; max-width: 160px;
+  option { background: $bg-card-solid; }
+}
+
+// ══════════════════════════════════════════════════════════
+// NODE LIST
+// ══════════════════════════════════════════════════════════
+.node-list { display: flex; flex-direction: column; gap: 10px; }
+
+.node-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  background: $bg-item;
+  border: 1px solid $border-dim;
+  border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: $border-mid;
+    background: rgba(0,180,255,0.05);
+  }
+}
+
+.node-left  { display: flex; align-items: center; gap: 12px; }
+.node-right { display: flex; align-items: center; gap: 10px; }
+
+.node-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  &--ready { background: $status-success; box-shadow: 0 0 8px rgba(0,230,118,0.5); }
+  &--error { background: $status-error; box-shadow: 0 0 8px rgba(255,82,82,0.4); }
+}
+
+.node-name { font-family: $mono; font-size: 13px; font-weight: 600; color: $text-primary; }
+
+.node-role {
+  display: flex; gap: 6px; margin-top: 4px;
+
+  &__badge {
+    font-family: $mono; font-size: 10px;
+    background: rgba(0,180,255,0.10);
+    color: $cyan-dim;
+    border: 1px solid rgba(0,180,255,0.18);
+    padding: 2px 7px; border-radius: 12px;
+
+    &--worker {
+      background: rgba(255,255,255,0.04);
+      color: $text-muted;
+      border-color: $border-dim;
+    }
+  }
+}
+
+.node-badge {
+  font-family: $mono; font-size: 10px;
+  padding: 3px 9px; border-radius: 20px;
+
+  &--cpu { background: rgba(0,180,255,0.12); color: $cyan-mid; border: 1px solid rgba(0,180,255,0.20); }
+  &--ram { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.20); }
+}
+
+// ══════════════════════════════════════════════════════════
+// POD LIST
+// ══════════════════════════════════════════════════════════
+.pod-list { display: flex; flex-direction: column; gap: 8px; }
+
+.pod-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 13px;
+  background: $bg-item;
+  border: 1px solid $border-dim;
+  border-radius: 9px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: $border-mid;
+    background: rgba(0,180,255,0.05);
+  }
+}
+
+.pod-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  &--running { background: $status-success; box-shadow: 0 0 5px rgba(0,230,118,0.45); }
+  &--pending { background: $status-warn; }
+  &--failed  { background: $status-error; }
+}
+
+.pod-info { flex: 1; min-width: 0; }
+.pod-name { font-family: $mono; font-size: 12px; font-weight: 600; color: $text-primary; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod-ns   { font-family: $mono; font-size: 10px; color: $text-dim; }
+
+.pod-meta { display: flex; align-items: center; gap: 10px; }
+
+.pod-restarts {
+  font-family: $mono; font-size: 11px; color: $status-warn;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.pod-action {
+  background: transparent;
+  border: 1px solid $border-dim;
+  border-radius: 7px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: $text-muted; cursor: pointer; font-size: 13px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: rgba(0,180,255,0.30);
+    color: $cyan-bright;
+    background: rgba(0,180,255,0.08);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MICROSERVICE LIST
+// ══════════════════════════════════════════════════════════
+.microservice-list { display: flex; flex-direction: column; gap: 8px; }
+
+.microservice-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: $bg-item;
+  border: 1px solid $border-dim;
+  border-radius: 12px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: $border-mid;
+    background: rgba(0,180,255,0.05);
+  }
+
+  &__left  { display: flex; align-items: center; gap: 16px; }
+  &__right { display: flex; align-items: center; gap: 10px; }
+}
+
+.microservice-icon {
+  width: 40px; height: 40px;
+  @include glass-surface(0.55, 6px);
+  border-color: rgba(0,180,255,0.22);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: $cyan-mid; font-size: 1.2rem;
+}
+
+.microservice-info {
+  .microservice-name {
+    font-family: $display; font-size: 15px; font-weight: 700;
+    color: $text-primary; margin-bottom: 5px;
+  }
+  .microservice-details { display: flex; flex-wrap: wrap; gap: 14px; }
+  .microservice-detail {
+    display: flex; align-items: center; gap: 5px;
+    font-family: $mono; font-size: 11px; color: $text-dim;
+    i { color: $cyan-dim; }
+  }
+}
+
+.microservice-action {
+  background: transparent;
+  border: 1px solid $border-dim;
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  color: $text-muted; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: rgba(0,180,255,0.30);
+    color: $cyan-bright;
+    background: rgba(0,180,255,0.08);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// PROJECTS GRID
+// ══════════════════════════════════════════════════════════
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  @include page-content();
+}
+
+.project-card {
+  @include glass-surface(0.62, 16px);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease both;
+  transition: transform 0.2s, border-color 0.25s, box-shadow 0.25s;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: $border-bright;
+    @include cyan-glow(0.14);
+  }
+
+  &__header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+
+  &__avatar-row { display: flex; align-items: center; gap: 12px; }
+
+  &__avatar {
+    width: 42px; height: 42px; border-radius: 10px;
+    @include glass-surface(0.55, 6px);
+    border-color: rgba(0,180,255,0.25);
+    color: $cyan-mid;
+    display: flex; align-items: center; justify-content: center;
+    font-family: $display; font-weight: 800; font-size: 18px; flex-shrink: 0;
+  }
+
+  &__name { font-family: $display; font-size: 15px; font-weight: 700; color: $text-primary; }
+  &__ns   { font-family: $mono; font-size: 10px; color: $cyan-dim; margin-top: 2px; }
+
+  &__desc {
+    font-family: $mono; font-size: 12px; color: $text-muted;
+    margin-bottom: 14px; min-height: 36px; line-height: 1.6;
+  }
+
+  &__github {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px; padding: 8px 10px;
+    @include glass-surface(0.70, 4px);
+    border-radius: 8px;
+
+    i { color: $text-dim; font-size: 12px; }
+    span { font-family: $mono; font-size: 11px; color: $text-dim; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .branch {
+      font-family: $mono; font-size: 10px; color: $cyan-dim;
+      flex-shrink: 0; padding: 2px 6px;
+      background: rgba(0,180,255,0.10);
+      border: 1px solid rgba(0,180,255,0.18);
+      border-radius: 4px;
+    }
+  }
+
+  &__footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 1px solid $border-dim;
+  }
+
+  &__date { font-family: $mono; font-size: 10px; color: $text-dim; display: flex; align-items: center; gap: 5px; }
+
+  &__action {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0,180,255,0.10);
+    border: 1px solid rgba(0,180,255,0.25);
+    border-radius: 8px; padding: 7px 14px;
+    font-family: $mono; font-size: 11px; color: $cyan-mid; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+
+    &:hover {
+      background: rgba(0,200,255,0.18);
+      border-color: $border-bright;
+      color: $cyan-bright;
+    }
+  }
+
+  &__delete {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: transparent; border: 1px solid $border-dim;
+    color: $text-dim; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255,82,82,0.10);
+      border-color: rgba(255,82,82,0.35);
+      color: $status-error;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// DEPLOYMENTS TIMELINE
+// ══════════════════════════════════════════════════════════
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+
+.deploy-card {
+  @include glass-surface(0.62, 14px);
+  border-radius: 14px;
+  padding: 18px 20px;
+  border-left: 3px solid $border-mid !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &--success {
+    border-left-color: $status-success !important;
+    &:hover { box-shadow: 0 0 16px rgba(0,230,118,0.10); }
+  }
+  &--failed {
+    border-left-color: $status-error !important;
+    &:hover { box-shadow: 0 0 16px rgba(255,82,82,0.10); }
+  }
+  &--building {
+    border-left-color: $status-warn !important;
+    &:hover { box-shadow: 0 0 16px rgba(255,171,0,0.10); }
+  }
+
+  &__body {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+
+  &__left { display: flex; align-items: center; gap: 14px; flex: 1; }
+
+  &__icon {
+    font-size: 1.4rem; flex-shrink: 0;
+    &--success { color: $status-success; }
+    &--failed  { color: $status-error; }
+    &--building { color: $status-warn; animation: spin 1.2s linear infinite; }
+    &--pending { color: $text-dim; }
+  }
+
+  &__version {
+    font-family: $mono; font-size: 13px; font-weight: 600;
+    color: $cyan-mid;
+    background: rgba(0,180,255,0.10);
+    border: 1px solid rgba(0,180,255,0.20);
+    padding: 2px 8px; border-radius: 6px;
+  }
+
+  &__build {
+    font-family: $mono; font-size: 11px; color: $text-dim;
+  }
+
+  &__meta {
+    display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px;
+
+    span {
+      display: flex; align-items: center; gap: 5px;
+      font-family: $mono; font-size: 11px; color: $text-dim;
+      i { color: $cyan-dim; font-size: 10px; }
+    }
+  }
+
+  &__logs-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    @include glass-surface(0.55, 6px);
+    border-radius: 8px; padding: 8px 14px;
+    font-family: $mono; font-size: 11px; color: $text-muted; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+
+    &:hover { border-color: $border-bright; color: $cyan-bright; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGS VIEWER
+// ══════════════════════════════════════════════════════════
+.logs-pre {
+  font-family: $mono; font-size: 12px; color: $cyan-mid;
+  @include glass-surface(0.80, 6px);
+  border-radius: 10px; padding: 16px;
+  max-height: 500px; overflow-y: auto;
+  white-space: pre-wrap; line-height: 1.7; margin: 0;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,180,255,0.20); border-radius: 2px; }
+}
+
+// ══════════════════════════════════════════════════════════
+// DROPDOWN (Logs page)
+// ══════════════════════════════════════════════════════════
+.filter-group {
+  flex: 1; min-width: 200px;
+
+  label {
+    display: block; font-family: $mono; font-size: 10px;
+    color: $cyan-dim; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 6px;
+  }
+
+  &--button { flex: 0 0 auto; }
+}
+
+.dropdown-wrapper {
+  position: relative;
+
+  .dropdown-spinner {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: $cyan-dim; font-size: 1rem; pointer-events: none;
+  }
+}
+
+:host ::ng-deep {
+  .p-dropdown-panel { z-index: 1005 !important; }
+
+  .p-dropdown {
+    @include glass-surface(0.80, 6px);
+    border-radius: 9px !important;
+    font-family: $mono !important;
+    font-size: 12px !important;
+    color: $text-primary !important;
+
+    &:hover { border-color: $border-mid !important; }
+
+    &.p-focus {
+      border-color: rgba(0,200,255,0.35) !important;
+      box-shadow: 0 0 0 2px rgba(0,200,255,0.07) !important;
+    }
+
+    .p-dropdown-label { padding: 9px 12px !important; color: $text-primary !important; font-family: $mono !important; }
+    .p-dropdown-trigger { color: $text-dim !important; }
+  }
+
+  .p-dropdown-panel .p-dropdown-items {
+    @include glass-surface(0.92, 16px);
+    border-color: $border-mid;
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .p-dropdown-panel .p-dropdown-item {
+    font-family: $mono !important; font-size: 12px !important;
+    color: $text-muted !important; padding: 8px 12px !important;
+    border-radius: 6px;
+
+    &:hover { background: rgba(0,180,255,0.10) !important; color: $cyan-bright !important; }
+    &.p-highlight { background: rgba(0,150,255,0.15) !important; color: $cyan-mid !important; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// FORM GROUP (dialog)
+// ══════════════════════════════════════════════════════════
+.form-group {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
+
+  label {
+    font-family: $mono; font-size: 10px; color: $cyan-dim;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// EMPTY / LOADING STATES
+// ══════════════════════════════════════════════════════════
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 60px 20px; gap: 12px; color: $text-dim;
+  grid-column: 1 / -1;
+
+  i { font-size: 2.8rem; color: $cyan-dim; }
+  p { font-family: $display; font-size: 14px; font-weight: 600; color: $text-muted; margin: 0; }
+  span { font-family: $mono; font-size: 12px; }
+}
+
+.loading-state {
+  text-align: center; padding: 40px;
+  color: $cyan-dim; font-size: 1.5rem;
+  grid-column: 1 / -1;
+}

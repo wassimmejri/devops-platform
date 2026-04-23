@@ -1,0 +1,640 @@
+@import 'styles/theme';
+
+// PrimeNG Theme — lara-dark-blue reste la base (on surcharge tout après)
+@import 'primeng/resources/themes/lara-dark-blue/theme.css';
+@import 'primeng/resources/primeng.min.css';
+@import 'primeicons/primeicons.css';
+
+// ══════════════════════════════════════════════════════════
+// GLOBAL RESET
+// ══════════════════════════════════════════════════════════
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: $bg-deep;
+  color: $text-primary;
+  font-family: $display;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ══════════════════════════════════════════════════════════
+// APP LAYOUT
+// ══════════════════════════════════════════════════════════
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-content {
+  margin-left: 220px;
+  flex: 1;
+  min-height: 100vh;
+  background: $bg-deep;
+}
+
+// ══════════════════════════════════════════════════════════
+// SCROLLBAR
+// ══════════════════════════════════════════════════════════
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: $bg-deep; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 160, 220, 0.25);
+  border-radius: 3px;
+  &:hover { background: rgba(0, 200, 255, 0.45); }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── TOASTS ── Glassmorphism DevOps
+// ══════════════════════════════════════════════════════════
+.p-toast {
+  z-index: 9999;
+
+  .p-toast-message {
+    @include glass-surface(0.75, 20px);
+    border-radius: 14px !important;
+    border-left: 3px solid !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45),
+                0 0 0 1px rgba(255,255,255,0.04) !important;
+    font-family: $mono !important;
+    overflow: hidden;
+    position: relative;
+
+    // Ligne de scan décorative en haut
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,200,255,0.4), transparent);
+    }
+
+    .p-toast-message-content {
+      padding: 14px 18px !important;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+
+      .p-toast-message-icon {
+        font-size: 18px !important;
+        margin-top: 1px;
+      }
+
+      .p-toast-message-text {
+        flex: 1;
+      }
+
+      .p-toast-summary {
+        font-family: $display !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        letter-spacing: 0.3px;
+        margin-bottom: 3px !important;
+        display: block;
+      }
+
+      .p-toast-detail {
+        font-family: $mono !important;
+        font-size: 11px !important;
+        opacity: 0.80;
+        line-height: 1.5;
+      }
+
+      .p-toast-icon-close {
+        color: inherit !important;
+        opacity: 0.40;
+        transition: opacity 0.2s;
+        &:hover { opacity: 1 !important; background: transparent !important; }
+      }
+    }
+
+    // ── SUCCESS ──────────────────────────────────────────
+    &.p-toast-message-success {
+      background: rgba(0, 30, 20, 0.80) !important;
+      border-color: $status-success !important;
+      color: #b9f5d0 !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
+                  0 0 20px rgba(0,230,118,0.12) !important;
+
+      .p-toast-message-icon { color: $status-success !important; }
+      .p-toast-summary { color: #e0fff0 !important; }
+    }
+
+    // ── INFO ─────────────────────────────────────────────
+    &.p-toast-message-info {
+      background: rgba(0, 20, 45, 0.82) !important;
+      border-color: $cyan-bright !important;
+      color: #b0e8f8 !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
+                  0 0 20px rgba(0,200,255,0.12) !important;
+
+      .p-toast-message-icon { color: $cyan-bright !important; }
+      .p-toast-summary { color: #e0f8ff !important; }
+    }
+
+    // ── WARNING ───────────────────────────────────────────
+    &.p-toast-message-warn {
+      background: rgba(30, 20, 0, 0.82) !important;
+      border-color: $status-warn !important;
+      color: #ffe9a0 !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
+                  0 0 20px rgba(255,171,0,0.10) !important;
+
+      .p-toast-message-icon { color: $status-warn !important; }
+      .p-toast-summary { color: #fff3cc !important; }
+    }
+
+    // ── ERROR ─────────────────────────────────────────────
+    &.p-toast-message-error {
+      background: rgba(30, 8, 8, 0.82) !important;
+      border-color: $status-error !important;
+      color: #ffbdbd !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
+                  0 0 20px rgba(255,82,82,0.12) !important;
+
+      .p-toast-message-icon { color: $status-error !important; }
+      .p-toast-summary { color: #ffe0e0 !important; }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── DIALOGS / MODALS ── Glassmorphism
+// ══════════════════════════════════════════════════════════
+.p-dialog-mask {
+  backdrop-filter: blur(6px) !important;
+  background: rgba(2, 8, 16, 0.65) !important;
+}
+
+.p-dialog {
+  @include glass-surface(0.82, 24px);
+  border: 1px solid $border-mid !important;
+  border-radius: 18px !important;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6),
+              0 0 0 1px rgba(0,200,255,0.06),
+              0 0 40px rgba(0,150,255,0.08) !important;
+
+  // Ligne cyan décorative en haut
+  &::before {
+    content: '';
+    display: block;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 5%, $cyan-dim 30%, $cyan-mid 50%, $cyan-dim 70%, transparent 95%);
+  }
+
+  .p-dialog-header {
+    background: rgba(4, 12, 30, 0.70) !important;
+    border-bottom: 1px solid $border-dim !important;
+    padding: 18px 22px !important;
+
+    .p-dialog-title {
+      font-family: $display !important;
+      font-weight: 700 !important;
+      font-size: 15px !important;
+      color: $text-primary !important;
+      letter-spacing: 0.2px;
+
+      &::before {
+        content: '// ';
+        color: $cyan-dim;
+        font-family: $mono;
+        font-size: 13px;
+      }
+    }
+
+    .p-dialog-header-icon {
+      color: $text-dim !important;
+      border-radius: 6px !important;
+      transition: color 0.2s, background 0.2s !important;
+      &:hover {
+        color: $text-muted !important;
+        background: rgba(0,180,255,0.08) !important;
+      }
+    }
+  }
+
+  .p-dialog-content {
+    background: rgba(4, 12, 30, 0.65) !important;
+    color: $text-muted !important;
+    padding: 22px !important;
+  }
+
+  .p-dialog-footer {
+    background: rgba(4, 12, 30, 0.70) !important;
+    border-top: 1px solid $border-dim !important;
+    padding: 14px 22px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+}
+
+// ── Confirm Dialog spécifique ─────────────────────────────
+.p-confirm-dialog {
+  .p-confirm-dialog-icon {
+    font-size: 28px !important;
+    color: $status-warn !important;
+  }
+  .p-confirm-dialog-message {
+    font-family: $mono !important;
+    font-size: 13px !important;
+    color: $text-muted !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── INPUTS ── Glassmorphism
+// ══════════════════════════════════════════════════════════
+.p-inputtext {
+  @extend %input-base;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+
+  &:focus {
+    border-color: rgba(0, 200, 255, 0.40) !important;
+    box-shadow: 0 0 0 2px rgba(0, 200, 255, 0.08),
+                0 0 14px rgba(0, 180, 255, 0.10) !important;
+  }
+  &::placeholder { color: $text-dim !important; }
+}
+
+.p-dropdown,
+.p-multiselect {
+  @include glass-surface(0.80, 8px);
+  border-radius: 9px !important;
+  color: $text-primary !important;
+
+  &:not(.p-disabled):hover {
+    border-color: $border-mid !important;
+  }
+  &.p-focus, &.p-inputwrapper-focus {
+    border-color: rgba(0,200,255,0.35) !important;
+    box-shadow: 0 0 0 2px rgba(0,200,255,0.07) !important;
+  }
+
+  .p-dropdown-label, .p-multiselect-label {
+    font-family: $mono !important;
+    font-size: 12px !important;
+    color: $text-primary !important;
+  }
+
+  .p-dropdown-trigger { color: $text-muted !important; }
+}
+
+.p-dropdown-panel,
+.p-multiselect-panel {
+  @include glass-surface(0.90, 20px);
+  border-radius: 12px !important;
+  border-color: $border-mid !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
+
+  .p-dropdown-item, .p-multiselect-item {
+    font-family: $mono !important;
+    font-size: 12px !important;
+    color: $text-muted !important;
+    padding: 9px 14px !important;
+    border-radius: 6px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(0,180,255,0.10) !important;
+      color: $cyan-bright !important;
+    }
+    &.p-highlight {
+      background: rgba(0,150,255,0.15) !important;
+      color: $cyan-mid !important;
+    }
+  }
+}
+
+// Input number
+.p-inputnumber-input {
+  @extend %input-base;
+}
+
+// ══════════════════════════════════════════════════════════
+// ── BUTTONS ── Glassmorphism
+// ══════════════════════════════════════════════════════════
+.p-button {
+  font-family: $display !important;
+  font-weight: 700 !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s !important;
+
+  &:active { transform: scale(0.97) !important; }
+
+  // Default / Primary
+  &:not(.p-button-outlined):not([class*="p-button-"]) {
+    background: rgba(0, 150, 220, 0.20) !important;
+    border-color: rgba(0, 180, 255, 0.35) !important;
+    color: $cyan-bright !important;
+    &:hover {
+      background: rgba(0, 180, 255, 0.28) !important;
+      border-color: $cyan-bright !important;
+      box-shadow: 0 0 14px rgba(0,200,255,0.25) !important;
+    }
+  }
+
+  &.p-button-outlined {
+    background: transparent !important;
+  }
+
+  // Success
+  &.p-button-success {
+    background: rgba(0, 200, 100, 0.12) !important;
+    border-color: rgba(0, 200, 100, 0.35) !important;
+    color: $status-success !important;
+    &:hover {
+      background: rgba(0, 200, 100, 0.20) !important;
+      box-shadow: 0 0 12px rgba(0,230,118,0.20) !important;
+    }
+  }
+
+  // Danger
+  &.p-button-danger {
+    background: rgba(255, 82, 82, 0.10) !important;
+    border-color: rgba(255, 82, 82, 0.30) !important;
+    color: $status-error !important;
+    &:hover {
+      background: rgba(255, 82, 82, 0.18) !important;
+      box-shadow: 0 0 12px rgba(255,82,82,0.18) !important;
+    }
+  }
+
+  // Info / Cyan
+  &.p-button-info {
+    background: rgba(0, 180, 255, 0.12) !important;
+    border-color: rgba(0, 180, 255, 0.30) !important;
+    color: $cyan-mid !important;
+    &:hover {
+      background: rgba(0, 200, 255, 0.20) !important;
+      border-color: $cyan-bright !important;
+      box-shadow: 0 0 14px rgba(0,200,255,0.20) !important;
+    }
+  }
+
+  // Secondary
+  &.p-button-secondary {
+    background: rgba(255,255,255,0.04) !important;
+    border-color: $border-mid !important;
+    color: $text-muted !important;
+    &:hover {
+      border-color: $border-bright !important;
+      color: $cyan-bright !important;
+    }
+  }
+
+  // Warning
+  &.p-button-warning {
+    background: rgba(255, 171, 0, 0.10) !important;
+    border-color: rgba(255, 171, 0, 0.30) !important;
+    color: $status-warn !important;
+    &:hover { background: rgba(255, 171, 0, 0.18) !important; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── TAGS / BADGES ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-tag {
+  font-family: $mono !important;
+  font-size: 10px !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  border: 1px solid transparent;
+
+  &.p-tag-success {
+    background: rgba(0,230,118,0.12) !important;
+    color: $status-success !important;
+    border-color: rgba(0,230,118,0.25) !important;
+  }
+  &.p-tag-warning {
+    background: rgba(255,171,0,0.12) !important;
+    color: $status-warn !important;
+    border-color: rgba(255,171,0,0.25) !important;
+  }
+  &.p-tag-danger {
+    background: rgba(255,82,82,0.12) !important;
+    color: $status-error !important;
+    border-color: rgba(255,82,82,0.25) !important;
+  }
+  &.p-tag-info {
+    background: rgba(0,200,255,0.12) !important;
+    color: $cyan-bright !important;
+    border-color: rgba(0,200,255,0.25) !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── DATATABLE ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-datatable {
+  .p-datatable-thead > tr > th {
+    @include glass-surface(0.70, 8px);
+    color: $cyan-muted !important;
+    font-family: $mono !important;
+    font-size: 10px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-color: $border-dim !important;
+    padding: 10px 14px !important;
+  }
+
+  .p-datatable-tbody > tr {
+    background: transparent !important;
+
+    &:hover > td {
+      background: rgba(0, 180, 255, 0.05) !important;
+    }
+
+    > td {
+      border-color: $border-dim !important;
+      color: $text-primary !important;
+      font-family: $mono !important;
+      font-size: 12px !important;
+      padding: 10px 14px !important;
+    }
+  }
+
+  .p-paginator {
+    @include glass-surface(0.65, 8px);
+    border-color: $border-dim !important;
+    font-family: $mono !important;
+    font-size: 12px !important;
+    color: $text-muted !important;
+
+    .p-paginator-element {
+      border-radius: 6px !important;
+      &:hover { background: rgba(0,180,255,0.10) !important; color: $cyan-bright !important; }
+      &.p-highlight { background: rgba(0,150,255,0.15) !important; color: $cyan-mid !important; }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── PROGRESS BAR ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-progressbar {
+  background: rgba(0,180,255,0.08) !important;
+  border-radius: 4px !important;
+  height: 4px !important;
+  overflow: hidden;
+
+  .p-progressbar-value {
+    background: linear-gradient(90deg, $cyan-mid, $blue-neon) !important;
+    box-shadow: 0 0 8px rgba(0,200,255,0.4);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── TOOLTIP ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-tooltip {
+  .p-tooltip-text {
+    @include glass-surface(0.90, 12px);
+    border-radius: 8px !important;
+    font-family: $mono !important;
+    font-size: 11px !important;
+    color: $text-primary !important;
+    padding: 6px 12px !important;
+    border-color: $border-mid !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── PANEL / CARD PrimeNG ──────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-panel {
+  @include glass-card;
+
+  .p-panel-header {
+    background: rgba(4, 12, 30, 0.60) !important;
+    border-bottom: 1px solid $border-dim !important;
+    border-radius: 16px 16px 0 0 !important;
+    padding: 14px 18px !important;
+    font-family: $display !important;
+    font-size: 13px !important;
+    color: $text-primary !important;
+  }
+
+  .p-panel-content {
+    background: transparent !important;
+    padding: 18px !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── TABS ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-tabview {
+  .p-tabview-nav {
+    background: transparent !important;
+    border-color: $border-dim !important;
+
+    li {
+      .p-tabview-nav-link {
+        @include glass-surface(0.40, 6px);
+        border-radius: 8px 8px 0 0 !important;
+        font-family: $display !important;
+        font-size: 12px !important;
+        color: $text-muted !important;
+        border-color: transparent !important;
+        transition: background 0.2s, color 0.2s;
+
+        &:hover {
+          background: rgba(0,180,255,0.10) !important;
+          color: $cyan-bright !important;
+        }
+      }
+
+      &.p-highlight .p-tabview-nav-link {
+        background: rgba(0,150,255,0.15) !important;
+        color: $cyan-bright !important;
+        border-bottom-color: $cyan-mid !important;
+      }
+    }
+  }
+
+  .p-tabview-panels {
+    background: transparent !important;
+    padding: 16px 0 !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── CHIP ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-chip {
+  background: rgba(0,180,255,0.10) !important;
+  color: $cyan-mid !important;
+  border: 1px solid rgba(0,180,255,0.20) !important;
+  border-radius: 20px !important;
+  font-family: $mono !important;
+  font-size: 11px !important;
+}
+
+// ══════════════════════════════════════════════════════════
+// ── SKELETON ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-skeleton {
+  background: rgba(0,150,255,0.07) !important;
+  border-radius: 8px !important;
+
+  &::after {
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(0,200,255,0.07),
+      transparent
+    ) !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── DIVIDER ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-divider {
+  &::before {
+    border-color: $border-dim !important;
+  }
+  .p-divider-content {
+    background: transparent !important;
+    font-family: $mono !important;
+    font-size: 10px !important;
+    color: $text-dim !important;
+    letter-spacing: 1px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ── MENU / CONTEXT MENU ───────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.p-menu, .p-contextmenu {
+  @include glass-surface(0.92, 20px);
+  border-radius: 12px !important;
+  border-color: $border-mid !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
+  padding: 6px !important;
+
+  .p-menuitem-link {
+    border-radius: 8px !important;
+    padding: 9px 14px !important;
+    font-family: $mono !important;
+    font-size: 12px !important;
+    color: $text-muted !important;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgba(0,180,255,0.10) !important;
+      color: $cyan-bright !important;
+    }
+
+    .p-menuitem-icon { color: $cyan-dim !important; margin-right: 10px; }
+  }
+  // Fix global PrimeNG dropdown overlay
+.p-dropdown-panel {
+  z-index: 9999 !important;
+}
+}

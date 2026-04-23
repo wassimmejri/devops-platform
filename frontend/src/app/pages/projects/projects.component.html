@@ -1,0 +1,100 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-grid"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Mes Projets</h1>
+      <p class="page-header__sub">{{ projects.length }} projet(s) au total</p>
+    </div>
+    <button class="add-btn" (click)="showCreateDialog = true">
+      <i class="pi pi-plus"></i>
+      Nouveau Projet
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="projects-grid">
+    <div class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+  </div>
+
+  <!-- Grid -->
+  <div *ngIf="!loading" class="projects-grid">
+
+    <div *ngFor="let project of projects" class="project-card">
+
+      <div class="project-card__header">
+        <div class="project-card__avatar-row">
+          <div class="project-card__avatar">{{ project.name[0].toUpperCase() }}</div>
+          <div>
+            <div class="project-card__name">{{ project.name }}</div>
+            <div class="project-card__ns">{{ project.k8s_namespace }}</div>
+          </div>
+        </div>
+        <button class="project-card__delete" (click)="deleteProject($event, project.id)">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <p class="project-card__desc">{{ project.description || 'Aucune description' }}</p>
+
+      <div class="project-card__github" *ngIf="project.github_url">
+        <i class="pi pi-github"></i>
+        <span>{{ project.github_url }}</span>
+        <span class="branch">{{ project.github_branch }}</span>
+      </div>
+
+      <div class="project-card__footer">
+        <span class="project-card__date">
+          <i class="pi pi-calendar"></i>
+          {{ project.created_at | date:'dd/MM/yyyy' }}
+        </span>
+        <button class="project-card__action" (click)="goToMicroservices(project.id)">
+          <i class="pi pi-cog"></i> Microservices
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="projects.length === 0" class="empty-state">
+      <i class="pi pi-folder-open"></i>
+      <p>Aucun projet pour l'instant</p>
+      <span>Créez votre premier projet pour commencer</span>
+      <button class="add-btn" style="margin-top: 12px" (click)="showCreateDialog = true">
+        <i class="pi pi-plus"></i> Nouveau Projet
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Dialog -->
+<p-dialog header="Nouveau Projet" [(visible)]="showCreateDialog" [modal]="true" [style]="{width: '480px'}">
+  <div style="padding: 8px 0">
+    <div class="form-group">
+      <label>Nom du projet *</label>
+      <input pInputText [(ngModel)]="newProject.name" placeholder="mon-projet" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input pInputText [(ngModel)]="newProject.description" placeholder="Description..." />
+    </div>
+    <div class="form-group">
+      <label>URL GitHub</label>
+      <input pInputText [(ngModel)]="newProject.github_url" placeholder="https://github.com/..." />
+    </div>
+    <div class="form-group">
+      <label>Branche</label>
+      <input pInputText [(ngModel)]="newProject.github_branch" placeholder="main" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [outlined]="true" (onClick)="showCreateDialog = false"></p-button>
+    <p-button label="Créer" icon="pi pi-plus" severity="success" [outlined]="true" (onClick)="createProject()"></p-button>
+  </ng-template>
+</p-dialog>

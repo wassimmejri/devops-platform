@@ -1,0 +1,390 @@
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
+import { ProjectService } from '../../services/project.service';
+import { K8sService } from '../../services/k8s.service';
+import { MetricsService } from '../../services/metrics.service';
+import { AuthService } from '../../services/auth.service';
+import { SocketService } from '../../services/socket.service';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { Subscription } from 'rxjs';
+
+@Component({
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.scss']
+})
+export class DashboardComponent implements OnInit, OnDestroy {
+
+  projects: any[] = [];
+  pods: any[] = [];
+  nodes: any[] = [];
+  nodeMetrics: any[] = [];
+  recentDeployments: any[] = [];
+
+  podSearch = '';
+  podStatusFilter = '';
+  projectSearch = '';
+
+  loadingProjects = false;
+  loadingPods = false;
+  loadingNodes = false;
+  loadingDeployments = false;
+
+  lastRefresh = '';
+  private isManualRefresh = false;
+
+  private metricsSub?: Subscription;
+  private podsSub?: Subscription;
+
+  cpuChartData: any;
+  cpuChartOptions: any;
+  ramChartData: any;
+  ramChartOptions: any;
+  podStatusChartData: any;
+  podStatusChartOptions: any;
+
+  constructor(
+    private router: Router,
+    private projectService: ProjectService,
+    private k8sService: K8sService,
+    private metricsService: MetricsService,
+    private authService: AuthService,
+    private socketService: SocketService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef                        // ← AJOUT
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAll();
+
+    this.metricsSub = this.socketService.watchMetrics(10).subscribe({
+      next: (data: any) => {
+        console.log('[WS Metrics] data reçu:', data);
+        this.nodeMetrics = this.mergeMetrics(data);
+        console.log('[WS Metrics] nodeMetrics mergés:', this.nodeMetrics);
+        this.updateLastRefresh();
+        this.buildCpuChart();
+        this.buildRamChart();
+        this.cdr.detectChanges();                         // ← AJOUT : force la mise à jour
+      },
+      error: (err) => console.warn('[WS Metrics] erreur:', err)
+    });
+
+    this.podsSub = this.socketService.watchPods('').subscribe({
+      next: (event: any) => {
+        this.applyPodEvent(event);
+        this.buildPodStatusChart();
+        this.cdr.detectChanges();                         // ← AJOUT : force la mise à jour
+      },
+      error: (err) => console.warn('[WS Pods] erreur:', err)
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.metricsSub?.unsubscribe();
+    this.podsSub?.unsubscribe();
+    this.socketService.disconnect('/metrics');
+    this.socketService.disconnect('/pods');
+  }
+
+  private mergeMetrics(data: any): any[] {
+    const cpuResults = data?.cpu?.data?.result || [];
+    const ramResults = data?.ram?.data?.result || [];
+
+    return cpuResults.map((cpuItem: any) => {
+      const instance = cpuItem.metric?.instance || '';
+      const ramItem  = ramResults.find((r: any) => r.metric?.instance === instance);
+      return {
+        instance,
+        cpu_usage: parseFloat(cpuItem.value?.[1] || '0'),
+        ram_usage: parseFloat(ramItem?.value?.[1] || '0'),
+      };
+    });
+  }
+
+  private applyPodEvent(event: any): void {
+    switch (event.event) {
+      case 'ADDED':
+        if (!this.pods.find(p => p.name === event.name)) {
+          this.pods = [...this.pods, {
+            name:      event.name,
+            namespace: event.namespace,
+            status:    event.status,
+            ready:     event.ready,
+            restarts:  event.restarts,
+            node:      event.node,
+          }];
+        }
+        break;
+      case 'MODIFIED':
+        this.pods = this.pods.map(p =>
+          p.name === event.name
+            ? { ...p, status: event.status, ready: event.ready, restarts: event.restarts }
+            : p
+        );
+        break;
+      case 'DELETED':
+        this.pods = this.pods.filter(p => p.name !== event.name);
+        break;
+    }
+  }
+
+  loadAll(): void {
+    this.updateLastRefresh();
+    this.loadProjects();
+    this.loadPods();
+    this.loadNodes();
+    this.loadNodeMetrics();
+
+    if (this.isManualRefresh) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Synchronisation terminée',
+        detail: 'Les données du cluster ont été actualisées.',
+        icon: 'pi pi-check-circle',
+        life: 3000
+      });
+      this.isManualRefresh = false;
+    }
+  }
+
+  updateLastRefresh(): void {
+    this.lastRefresh = new Date().toLocaleTimeString([], {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+
+  loadProjects(): void {
+    this.loadingProjects = true;
+    this.projectService.getProjects().subscribe({
+      next: (data) => {
+        this.projects = data;
+        this.loadingProjects = false;
+        const namespace = this.projects?.[0]?.k8s_namespace;
+        this.loadRecentDeployments(namespace);
+      },
+      error: () => { this.loadingProjects = false; this.recentDeployments = []; }
+    });
+  }
+
+  loadRecentDeployments(namespace?: string): void {
+    if (!namespace) { this.recentDeployments = []; return; }
+    this.loadingDeployments = true;
+    this.k8sService.getDeployments(namespace).subscribe({
+      next: (data) => { this.recentDeployments = data.slice(0, 5); this.loadingDeployments = false; },
+      error: () => { this.loadingDeployments = false; this.recentDeployments = []; }
+    });
+  }
+
+  loadPods(): void {
+    this.loadingPods = true;
+    this.k8sService.getPods().subscribe({
+      next: (data) => { this.pods = data; this.loadingPods = false; this.buildPodStatusChart(); },
+      error: () => { this.loadingPods = false; }
+    });
+  }
+
+  loadNodes(): void {
+    this.loadingNodes = true;
+    this.k8sService.getNodes().subscribe({
+      next: (data) => { this.nodes = data; this.loadingNodes = false; },
+      error: () => { this.loadingNodes = false; }
+    });
+  }
+
+  loadNodeMetrics(): void {
+    this.metricsService.getNodeMetrics().subscribe({
+      next: (data) => {
+        this.nodeMetrics = data;
+        this.buildCpuChart();
+        this.buildRamChart();
+      },
+      error: (err) => console.warn('Erreur métriques Prometheus:', err)
+    });
+  }
+
+  get avgCpuUsage(): number {
+    if (!this.nodeMetrics.length) return 0;
+    return this.nodeMetrics.reduce((acc, m) => acc + (m.cpu_usage || 0), 0) / this.nodeMetrics.length;
+  }
+
+  get avgRamUsage(): number {
+    if (!this.nodeMetrics.length) return 0;
+    return this.nodeMetrics.reduce((acc, m) => acc + (m.ram_usage || 0), 0) / this.nodeMetrics.length;
+  }
+
+  get runningPods()    { return this.pods.filter(p => p.status === 'Running').length; }
+  get pendingPods()    { return this.pods.filter(p => p.status === 'Pending').length; }
+  get failedPods()     { return this.pods.filter(p => p.status === 'Failed').length; }
+  get readyNodes()     { return this.nodes.filter(n => n.status === 'Ready').length; }
+  get totalCpuCores()  { return this.nodes.reduce((sum, n) => sum + (Number(n.cpu) || 0), 0); }
+  get totalRamGB()     { return this.nodes.reduce((sum, n) => sum + (this.parseMemoryValue(n.memory) / 1024 / 1024), 0); }
+
+  get filteredPods() {
+    const search = this.podSearch.trim().toLowerCase();
+    return this.pods.filter(pod => {
+      const matchesSearch = !search || [pod.name, pod.namespace, pod.status]
+        .filter(Boolean).some(v => v.toString().toLowerCase().includes(search));
+      const matchesStatus = !this.podStatusFilter || pod.status === this.podStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  get filteredProjects() {
+    const search = this.projectSearch.trim().toLowerCase();
+    return this.projects.filter(project => {
+      const name = project.name?.toString().toLowerCase() || '';
+      const ns   = project.k8s_namespace?.toString().toLowerCase() || '';
+      return !search || name.includes(search) || ns.includes(search);
+    });
+  }
+
+  private parseMemoryValue(memory: any): number {
+    if (memory == null) return 0;
+    if (typeof memory === 'number') return Number.isFinite(memory) ? memory : 0;
+    const value = memory.toString().trim();
+    if (!value) return 0;
+    const numeric = parseFloat(value.replace(/,/g, '.'));
+    if (!Number.isNaN(numeric) && /^\s*[\d.,]+\s*$/.test(value)) return numeric;
+    const normalized = value.toUpperCase().replace(/B$/, '').trim();
+    const match = normalized.match(/^([\d.]+)\s*(K|KI|M|MI|G|GI|T|TI)$/);
+    if (!match) return Number.isFinite(numeric) ? numeric : 0;
+    const amount = parseFloat(match[1]);
+    if (Number.isNaN(amount)) return 0;
+    switch (match[2]) {
+      case 'K': case 'KI': return amount * 1024;
+      case 'M': case 'MI': return amount * 1024 ** 2;
+      case 'G': case 'GI': return amount * 1024 ** 3;
+      case 'T': case 'TI': return amount * 1024 ** 4;
+      default: return numeric;
+    }
+  }
+
+  getNodeUsage(node: any): { cpuUsage: number | null; ramUsage: number | null } {
+    if (!node || !node.ip) return { cpuUsage: null, ramUsage: null };
+    const metric = this.nodeMetrics.find(m => m.instance?.startsWith(node.ip));
+    return { cpuUsage: metric?.cpu_usage ?? null, ramUsage: metric?.ram_usage ?? null };
+  }
+
+  buildPodStatusChart(): void {
+    this.podStatusChartData = {
+      labels: ['Running', 'Pending', 'Failed'],
+      datasets: [{
+        data: [this.runningPods, this.pendingPods, this.failedPods],
+        backgroundColor: ['#00c864', '#f59e0b', '#ef4444'],
+        borderWidth: 0
+      }]
+    };
+    this.podStatusChartOptions = {
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#7a9a8a', padding: 16, font: { family: 'JetBrains Mono', size: 11 } }
+        }
+      },
+      cutout: '70%'
+    };
+  }
+
+  buildCpuChart(): void {
+    const labels: string[] = [];
+    const data: number[]   = [];
+    for (const node of this.nodes) {
+      const usage = this.getNodeUsage(node);
+      labels.push(node.name.split('-')[0]);
+      data.push(usage.cpuUsage ?? 0);
+    }
+    this.cpuChartData = {
+      labels,
+      datasets: [{ label: 'CPU Usage (%)', data, backgroundColor: 'rgba(0,200,100,0.7)', borderRadius: 6 }]
+    };
+    this.cpuChartOptions = {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#7a9a8a', font: { family: 'JetBrains Mono', size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#3a5a50', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1a2a3a' } },
+        y: { ticks: { color: '#3a5a50', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1a2a3a' }, max: 100 }
+      }
+    };
+  }
+
+  buildRamChart(): void {
+    const labels: string[] = [];
+    const data: number[]   = [];
+    for (const node of this.nodes) {
+      const usage = this.getNodeUsage(node);
+      labels.push(node.name.split('-')[0]);
+      data.push(usage.ramUsage ?? 0);
+    }
+    this.ramChartData = {
+      labels,
+      datasets: [{ label: 'RAM Usage (%)', data, backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6 }]
+    };
+    this.ramChartOptions = {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#7a9a8a', font: { family: 'JetBrains Mono', size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#3a5a50', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1a2a3a' } },
+        y: { ticks: { color: '#3a5a50', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1a2a3a' }, max: 100 }
+      }
+    };
+  }
+
+  goToProject(projectId: number): void {
+    if (!projectId) return;
+    this.router.navigate(['/projects', projectId, 'microservices']);
+  }
+
+  getStatusSeverity(status: string): string {
+    switch (status) {
+      case 'Running': return 'success';
+      case 'Pending': return 'warning';
+      case 'Failed':  return 'danger';
+      default:        return 'info';
+    }
+  }
+
+  getNodeRamGB(node: any): string {
+    const bytes = this.parseMemoryValue(node.memory);
+    return isFinite(bytes) ? (bytes / 1024 / 1024).toFixed(0) : '0';
+  }
+
+  getNodeSeverity(status: string): string {
+    return status === 'Ready' ? 'success' : 'danger';
+  }
+
+  get currentUserName(): string {
+    const user = this.getCurrentUser();
+    return user?.full_name || user?.name || user?.email || 'Utilisateur';
+  }
+
+  navigateTo(path: string): void { this.router.navigate([path]); }
+
+  confirmLogout(event: Event): void {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: 'Voulez-vous vraiment vous déconnecter ?',
+      icon: 'pi pi-sign-out',
+      key: 'logout',
+      accept: () => this.authService.logout()
+    });
+  }
+
+  logout(): void { this.authService.logout(); }
+  getCurrentUser(): any { return this.authService.getCurrentUser(); }
+
+  getTimeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    return `${Math.floor(hrs / 24)}j`;
+  }
+
+  manualRefresh(): void {
+    this.isManualRefresh = true;
+    this.loadAll();
+  }
+}

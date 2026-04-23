@@ -1,0 +1,14 @@
+<p-toast></p-toast>
+
+<!-- Pages sans sidebar (login) -->
+<ng-container *ngIf="!showSidebar">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<!-- Layout principal avec sidebar -->
+<div class="app-shell" *ngIf="showSidebar">
+  <app-sidebar></app-sidebar>
+  <main class="app-content" [class.app-content--collapsed]="sidebarCollapsed">
+    <router-outlet></router-outlet>
+  </main>
+</div>

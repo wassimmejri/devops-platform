@@ -1,0 +1,4 @@
+@import '../../../styles/theme';
+@import '../../../app/pages-shared'; // ← remplace par le chemin réel si différent
+
+.stats-row { grid-template-columns: repeat(5, 1fr); }

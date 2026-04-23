@@ -1,0 +1,129 @@
+<p-toast></p-toast>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--green"></div>
+<div class="bg-glow bg-glow--blue"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div style="display:flex; align-items:center; gap:14px">
+      <button class="back-btn" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="page-header__title">{{ project.name }}</h1>
+        <p class="page-header__sub">{{ project.k8s_namespace }}</p>
+      </div>
+    </div>
+    <button class="back-btn" (click)="showCreateDialog = true">
+      <i class="pi pi-plus"></i> Nouveau microservice
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-mini">
+      <div class="stat-mini__label">Total</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ microservices.length }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Running</div>
+      <div class="stat-mini__value stat-mini__value--green">{{ runningCount }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Deploying</div>
+      <div class="stat-mini__value stat-mini__value--yellow">{{ deployingCount }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Error</div>
+      <div class="stat-mini__value stat-mini__value--red">{{ errorCount }}</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+  </div>
+
+  <!-- Microservices List -->
+  <div *ngIf="!loading" class="panel">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-box panel__title-icon"></i>
+        Microservices
+      </h3>
+      <span class="live-badge">
+        <span class="live-badge__dot"></span>
+        {{ microservices.length }} service(s)
+      </span>
+    </div>
+
+    <!-- Liste des microservices sous forme de cartes -->
+    <div class="microservice-list">
+      <div class="microservice-item" *ngFor="let ms of microservices">
+        <div class="microservice-item__left">
+          <div class="microservice-icon">
+            <i class="pi pi-cog"></i>
+          </div>
+          <div class="microservice-info">
+            <div class="microservice-name">{{ ms.name }}</div>
+            <div class="microservice-details">
+              <span class="microservice-detail"><i class="pi pi-tag"></i> {{ ms.image || '—' }}</span>
+              <span class="microservice-detail"><i class="pi pi-sitemap"></i> Port {{ ms.port }}</span>
+              <span class="microservice-detail"><i class="pi pi-copy"></i> {{ ms.replicas }} replica(s)</span>
+            </div>
+          </div>
+        </div>
+        <div class="microservice-item__right">
+          <p-tag [value]="ms.status || 'unknown'" [severity]="getStatusSeverity(ms.status)"></p-tag>
+          <button class="microservice-action" (click)="deploy(ms)" title="Déployer">
+            <i class="pi pi-play"></i>
+          </button>
+          <button class="microservice-action" (click)="viewDeployments(ms)" title="Historique">
+            <i class="pi pi-history"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="microservices.length === 0" class="empty-state">
+        <i class="pi pi-box"></i>
+        <p>Aucun microservice pour ce projet</p>
+        <span>Cliquez sur "Nouveau microservice" pour commencer</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Créer Microservice -->
+<p-dialog
+  header="Ajouter un microservice"
+  [(visible)]="showCreateDialog"
+  [modal]="true"
+  [style]="{width: '500px'}"
+>
+  <div class="flex flex-column gap-4 pt-4">
+    <div class="flex flex-column gap-2">
+      <label class="text-gray-300">Nom *</label>
+      <input pInputText [(ngModel)]="newMicroservice.name" placeholder="user-service" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="text-gray-300">Image Docker</label>
+      <input pInputText [(ngModel)]="newMicroservice.image" placeholder="wassim/user-service:latest" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="text-gray-300">Port</label>
+      <input pInputText type="number" [(ngModel)]="newMicroservice.port" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="text-gray-300">Replicas</label>
+      <input pInputText type="number" [(ngModel)]="newMicroservice.replicas" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" (onClick)="showCreateDialog = false"></p-button>
+    <p-button label="Ajouter" icon="pi pi-plus" (onClick)="createMicroservice()"></p-button>
+  </ng-template>
+</p-dialog>

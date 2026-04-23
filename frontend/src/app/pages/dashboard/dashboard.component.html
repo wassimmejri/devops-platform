@@ -1,0 +1,293 @@
+<p-toast></p-toast>
+
+<div class="dashboard">
+
+  <!-- Background effects -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow--green"></div>
+  <div class="bg-glow bg-glow--blue"></div>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-header__title">Vue d'ensemble</h1>
+      <div class="page-header__meta">
+        <span class="sys-ticker">
+          <span class="sys-ticker__dot"></span>
+          <span class="sys-ticker__text">All systems operational</span>
+        </span>
+        <span class="last-refresh">
+          <i class="pi pi-clock"></i>
+          {{ lastRefresh || 'En cours...' }}
+        </span>
+      </div>
+    </div>
+    <button class="refresh-btn" (click)="manualRefresh()" title="Rafraîchir">
+      <i class="pi pi-refresh"></i>
+      <span>Rafraîchir</span>
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+
+    <div class="stat-card stat-card--blue clickable" (click)="navigateTo('/projects')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-folder"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ projects.length }}</div>
+        <div class="stat-label">Projets</div>
+        <div class="stat-trend"><i class="pi pi-arrow-right"></i> Voir tout</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--green clickable" (click)="navigateTo('/cluster')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-box"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ runningPods }}</div>
+        <div class="stat-label">Pods Running</div>
+        <div class="stat-trend">sur {{ pods.length }} total</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--purple clickable" (click)="navigateTo('/cluster')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-server"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ readyNodes }}</div>
+        <div class="stat-label">Nœuds Ready</div>
+        <div class="stat-trend">sur {{ nodes.length }} nœuds</div>
+      </div>
+    </div>
+
+    <div class="stat-card clickable"
+         [class.stat-card--red]="failedPods > 0"
+         [class.stat-card--gray]="failedPods === 0"
+         (click)="navigateTo('/cluster')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ failedPods }}</div>
+        <div class="stat-label">Pods en erreur</div>
+        <div class="stat-trend">{{ pendingPods }} en attente</div>
+      </div>
+    </div>
+
+    <!-- CPU Usage (moyenne cluster) -->
+    <div class="stat-card stat-card--cyan clickable" (click)="navigateTo('/cluster')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-chart-line"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ avgCpuUsage | number:'1.0-1' }}<span class="stat-unit">%</span></div>
+        <div class="stat-label">CPU utilisé</div>
+        <div class="stat-trend">{{ totalCpuCores }} cores total</div>
+      </div>
+    </div>
+
+    <!-- RAM Usage (moyenne cluster) -->
+    <div class="stat-card stat-card--indigo clickable" (click)="navigateTo('/cluster')">
+      <div class="stat-card__bar"></div>
+      <div class="stat-icon">
+        <i class="pi pi-database"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ avgRamUsage | number:'1.0-1' }}<span class="stat-unit">%</span></div>
+        <div class="stat-label">RAM utilisée</div>
+        <div class="stat-trend">{{ totalRamGB.toFixed(1) }} GB total</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+
+    <!-- Distribution des Pods -->
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">Distribution des Pods</h3>
+        <span class="live-badge">
+          <span class="live-badge__dot"></span>
+          Live
+        </span>
+      </div>
+      <div class="chart-wrapper donut-wrapper" *ngIf="podStatusChartData">
+        <p-chart type="doughnut" [data]="podStatusChartData" [options]="podStatusChartOptions" height="220px"></p-chart>
+        <div class="donut-center">
+          <div class="donut-total">{{ pods.length }}</div>
+          <div class="donut-label">Total</div>
+        </div>
+      </div>
+      <div *ngIf="loadingPods" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+    </div>
+
+    <!-- CPU par Nœud -->
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">CPU par Nœud</h3>
+        <span class="panel__sub">Utilisation (%)</span>
+      </div>
+      <div class="chart-wrapper" *ngIf="cpuChartData">
+        <p-chart type="bar" [data]="cpuChartData" [options]="cpuChartOptions" height="220px"></p-chart>
+      </div>
+      <div *ngIf="loadingNodes" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+    </div>
+
+    <!-- RAM par Nœud -->
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">RAM par Nœud</h3>
+        <span class="panel__sub">Utilisation (%)</span>
+      </div>
+      <div class="chart-wrapper" *ngIf="ramChartData">
+        <p-chart type="bar" [data]="ramChartData" [options]="ramChartOptions" height="220px"></p-chart>
+      </div>
+      <div *ngIf="loadingNodes" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="bottom-row">
+
+    <!-- Nodes -->
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">
+          <i class="pi pi-server panel__title-icon"></i>
+          Nœuds du Cluster
+        </h3>
+      </div>
+      <div class="node-list">
+        <div class="node-item" *ngFor="let node of nodes">
+          <div class="node-left">
+            <div class="node-dot" [class.node-dot--ready]="node.status === 'Ready'" [class.node-dot--error]="node.status !== 'Ready'"></div>
+            <div>
+              <div class="node-name">{{ node.name }}</div>
+              <div class="node-role">{{ node.roles?.join(', ') || 'worker' }}</div>
+            </div>
+          </div>
+          <div class="node-right">
+            <span class="node-badge node-badge--cpu">
+              {{ getNodeUsage(node).cpuUsage?.toFixed(1) || '—' }}% 
+              <span style="opacity:0.6">/ {{ node.cpu }} cores</span>
+            </span>
+            <span class="node-badge node-badge--ram">
+              {{ getNodeUsage(node).ramUsage?.toFixed(1) || '—' }}% 
+              <span style="opacity:0.6">/ {{ getNodeRamGB(node) }} GB</span>
+            </span>
+            <p-tag [value]="node.status" [severity]="getNodeSeverity(node.status)"></p-tag>
+          </div>
+        </div>
+        <div *ngIf="loadingNodes" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+      </div>
+    </div>
+
+    <!-- Pods -->
+    <div class="panel panel--wide">
+      <div class="panel__header">
+        <h3 class="panel__title">
+          <i class="pi pi-box panel__title-icon"></i>
+          Pods Récents
+        </h3>
+        <a routerLink="/cluster" class="see-all">Voir tout →</a>
+      </div>
+      <div class="filter-row">
+        <input type="text" placeholder="Rechercher un pod..." [(ngModel)]="podSearch" class="filter-input" />
+        <select [(ngModel)]="podStatusFilter" class="filter-select">
+          <option value="">Tous les statuts</option>
+          <option value="Running">Running</option>
+          <option value="Pending">Pending</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+      <div class="pod-list">
+        <div class="pod-item" *ngFor="let pod of filteredPods.slice(0, 8)">
+          <div class="pod-dot" [class.pod-dot--running]="pod.status === 'Running'"
+                               [class.pod-dot--pending]="pod.status === 'Pending'"
+                               [class.pod-dot--failed]="pod.status === 'Failed'"></div>
+          <div class="pod-info">
+            <div class="pod-name">{{ pod.name }}</div>
+            <div class="pod-ns">{{ pod.namespace }}</div>
+          </div>
+          <div class="pod-meta">
+            <span class="pod-restarts" *ngIf="pod.restarts > 0">
+              <i class="pi pi-exclamation-circle"></i> {{ pod.restarts }}
+            </span>
+            <p-tag [value]="pod.status" [severity]="getStatusSeverity(pod.status)"></p-tag>
+          </div>
+        </div>
+        <div *ngIf="loadingPods" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+        <div *ngIf="!loadingPods && pods.length === 0" class="empty-state">Aucun pod trouvé</div>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">
+          <i class="pi pi-folder panel__title-icon"></i>
+          Projets
+        </h3>
+        <a routerLink="/projects" class="see-all">Voir tout →</a>
+      </div>
+      <div class="filter-row">
+        <input type="text" placeholder="Rechercher un projet..." [(ngModel)]="projectSearch" class="filter-input" />
+      </div>
+      <div class="project-list">
+        <div class="project-item" *ngFor="let project of filteredProjects.slice(0, 5)" (click)="goToProject(project.id)">
+          <div class="project-avatar">{{ project.name[0].toUpperCase() }}</div>
+          <div class="project-info">
+            <div class="project-name">{{ project.name }}</div>
+            <div class="project-ns">{{ project.k8s_namespace }}</div>
+          </div>
+          <i class="pi pi-chevron-right project-arrow"></i>
+        </div>
+        <div *ngIf="loadingProjects" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+        <div *ngIf="!loadingProjects && projects.length === 0" class="empty-state">Aucun projet</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Deployments Row -->
+  <div class="deployments-row">
+    <div class="panel">
+      <div class="panel__header">
+        <h3 class="panel__title">
+          <i class="pi pi-cloud-upload panel__title-icon"></i>
+          Déploiements récents
+        </h3>
+      </div>
+      <div class="deployment-list">
+        <div class="deployment-item" *ngFor="let d of recentDeployments">
+          <div class="deployment-info">
+            <div class="deployment-name">{{ d.name || d.deployment_name || d.metadata?.name || 'Déploiement' }}</div>
+            <div class="deployment-ns">{{ d.namespace || d.k8s_namespace || d.metadata?.namespace || 'N/A' }}</div>
+          </div>
+          <p-tag [value]="d.status || d.phase || 'Inconnu'" [severity]="getStatusSeverity(d.status || d.phase || '')"></p-tag>
+        </div>
+        <div *ngIf="loadingDeployments" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+        <div *ngIf="!loadingDeployments && recentDeployments.length === 0" class="empty-state">Aucun déploiement récent</div>
+      </div>
+    </div>
+  </div>
+
+</div>

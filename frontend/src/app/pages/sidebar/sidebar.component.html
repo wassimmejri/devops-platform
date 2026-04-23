@@ -1,0 +1,180 @@
+<nav class="sidebar" [class.sidebar--collapsed]="collapsed">
+
+  <!-- Logo -->
+  <div class="sidebar__brand">
+    <div class="sidebar__brand-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.6">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar__brand-name" *ngIf="!collapsed">DevBoard</span>
+    <button class="sidebar__collapse-btn" (click)="toggleCollapse()" [title]="collapsed ? 'Expand' : 'Collapse'">
+      <i class="pi" [class.pi-chevron-left]="!collapsed" [class.pi-chevron-right]="collapsed"></i>
+    </button>
+  </div>
+
+  <!-- Nav Links -->
+  <div class="sidebar__nav">
+    <div class="sidebar__nav-group">
+      <span class="sidebar__nav-label" *ngIf="!collapsed">MAIN</span>
+
+      <a class="sidebar__nav-item"
+         routerLink="/dashboard"
+         routerLinkActive="sidebar__nav-item--active"
+         [title]="collapsed ? 'Dashboard' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Dashboard</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+      <a class="sidebar__nav-item"
+         routerLink="/projects"
+         routerLinkActive="sidebar__nav-item--active"
+         [title]="collapsed ? 'Projets' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Projets</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+      <a class="sidebar__nav-item"
+         routerLink="/cluster"
+         routerLinkActive="sidebar__nav-item--active"
+         [title]="collapsed ? 'Cluster' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Cluster</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+    </div>
+
+    <div class="sidebar__nav-group">
+      <span class="sidebar__nav-label" *ngIf="!collapsed">CI/CD</span>
+
+      <a class="sidebar__nav-item sidebar__nav-item--soon"
+         [title]="collapsed ? 'Pipelines (bientôt)' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Pipelines</span>
+        <span class="sidebar__soon-badge" *ngIf="!collapsed">soon</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+      <!-- LOGS (ACTIF) -->
+      <a class="sidebar__nav-item"
+         routerLink="/logs"
+         routerLinkActive="sidebar__nav-item--active"
+         [title]="collapsed ? 'Logs' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Logs</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+<a class="sidebar__nav-item"
+   routerLink="/alerts"
+   routerLinkActive="sidebar__nav-item--active"
+   [title]="collapsed ? 'Alerts' : ''">
+
+  <div class="sidebar__nav-icon">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86l-8 14A2 2 0 004 21h16a2 2 0 001.71-3.14l-8-14a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  </div>
+
+  <span class="sidebar__nav-text" *ngIf="!collapsed">Alerts</span>
+  <span class="sidebar__nav-active-bar"></span>
+
+</a>
+
+    </div>
+
+    <div class="sidebar__nav-group">
+  <span class="sidebar__nav-label" *ngIf="!collapsed">MONITORING</span>
+
+  <a class="sidebar__nav-item"
+     href="http://grafana.devops.local:32347"
+     target="_blank"
+     rel="noopener noreferrer"
+     [title]="collapsed ? 'Grafana' : ''">
+    <div class="sidebar__nav-icon">
+      <i class="pi pi-chart-bar" style="font-size: 1.1rem;"></i>
+    </div>
+    <span class="sidebar__nav-text" *ngIf="!collapsed">
+      Grafana
+      <i class="pi pi-external-link" style="font-size: 10px; margin-left: 5px; opacity: 0.7;"></i>
+    </span>
+    <span class="sidebar__nav-active-bar"></span>
+  </a>
+</div>
+  
+
+    <div class="sidebar__nav-group">
+      <span class="sidebar__nav-label" *ngIf="!collapsed">SYSTEM</span>
+
+      <a class="sidebar__nav-item sidebar__nav-item--soon"
+         [title]="collapsed ? 'Settings (bientôt)' : ''">
+        <div class="sidebar__nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </div>
+        <span class="sidebar__nav-text" *ngIf="!collapsed">Settings</span>
+        <span class="sidebar__soon-badge" *ngIf="!collapsed">soon</span>
+        <span class="sidebar__nav-active-bar"></span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Status indicator -->
+  <div class="sidebar__status" *ngIf="!collapsed">
+    <span class="sidebar__status-dot"></span>
+    <span class="sidebar__status-text">All systems operational</span>
+  </div>
+
+  <!-- User -->
+  <div class="sidebar__user">
+    <div class="sidebar__user-avatar">
+      {{ userInitials }}
+    </div>
+    <div class="sidebar__user-info" *ngIf="!collapsed">
+      <div class="sidebar__user-name">{{ userName }}</div>
+      <div class="sidebar__user-role">DevOps Engineer</div>
+    </div>
+    <button class="sidebar__logout-btn" (click)="confirmLogout($event)" title="Se déconnecter" *ngIf="!collapsed">
+      <i class="pi pi-sign-out"></i>
+    </button>
+  </div>
+
+</nav>
+
+<p-confirmDialog styleClass="devboard-confirm-dialog" key="sidebar-logout"></p-confirmDialog>

@@ -1,0 +1,146 @@
+<p-toast></p-toast>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--green"></div>
+<div class="bg-glow bg-glow--blue"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div style="display:flex; align-items:center; gap:14px">
+      <button class="back-btn" routerLink="/dashboard">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="page-header__title">Alertes</h1>
+        <p class="page-header__sub">
+          AlertManager ·
+          <span *ngIf="wsActive">Live WebSocket</span>
+          <span *ngIf="!wsActive">Chargement...</span>
+        </p>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px">
+      <span *ngIf="wsActive" class="live-badge">
+        <span class="live-badge__dot"></span>
+        Live · {{ lastRefresh }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="stats-row">
+    <div class="stat-mini stat-mini--red">
+      <div class="stat-mini__label">Critical</div>
+      <div class="stat-mini__value stat-mini__value--red">{{ summary.critical }}</div>
+    </div>
+    <div class="stat-mini stat-mini--yellow">
+      <div class="stat-mini__label">Warning</div>
+      <div class="stat-mini__value stat-mini__value--yellow">{{ summary.warning }}</div>
+    </div>
+    <div class="stat-mini stat-mini--blue">
+      <div class="stat-mini__label">Info</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ summary.info }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Total</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ summary.total }}</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="panel">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-sliders-h panel__title-icon"></i>
+        Filtres
+      </h3>
+      <button class="back-btn" (click)="clearFilters()">
+        <i class="pi pi-times"></i> Réinitialiser
+      </button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Sévérité</label>
+        <p-dropdown
+          [options]="[
+            {label: 'Toutes', value: ''},
+            {label: 'Critical', value: 'critical'},
+            {label: 'Warning',  value: 'warning'},
+            {label: 'Info',     value: 'info'}
+          ]"
+          [(ngModel)]="severityFilter"
+          appendTo="body"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+      <div class="filter-group">
+        <label>Nom de l'alerte</label>
+        <input type="text"
+               class="filter-input"
+               placeholder="Rechercher..."
+               [(ngModel)]="nameFilter" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts Table -->
+  <div class="panel panel--wide" style="margin-top:20px">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-bell panel__title-icon"></i>
+        Alertes actives
+        <span class="panel__title-sub">{{ filteredAlerts.length }} résultat(s)</span>
+      </h3>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+
+    <div *ngIf="!loading && filteredAlerts.length === 0" class="empty-state">
+      <i class="pi pi-check-circle" style="color:#00c864"></i>
+      <p>Aucune alerte active</p>
+      <span>Tous les systèmes sont opérationnels</span>
+    </div>
+
+    <div *ngIf="!loading && filteredAlerts.length > 0" class="alert-list">
+      <div class="alert-item"
+           *ngFor="let alert of filteredAlerts"
+           [class.alert-item--critical]="alert.labels?.severity === 'critical'"
+           [class.alert-item--warning]="alert.labels?.severity === 'warning'">
+
+        <div class="alert-left">
+          <i class="pi {{ getSeverityIcon(alert.labels?.severity) }} alert-icon"
+             [class.alert-icon--critical]="alert.labels?.severity === 'critical'"
+             [class.alert-icon--warning]="alert.labels?.severity === 'warning'"
+             [class.alert-icon--info]="!alert.labels?.severity || alert.labels?.severity === 'info'">
+          </i>
+          <div>
+            <div class="alert-name">{{ alert.labels?.alertname || 'Alerte inconnue' }}</div>
+            <div class="alert-summary">{{ alert.annotations?.summary || alert.annotations?.description || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="alert-right">
+          <span class="alert-badge {{ getSeverityClass(alert.labels?.severity) }}">
+            {{ alert.labels?.severity || 'info' }}
+          </span>
+          <span class="alert-state {{ getStatusClass(alert.status?.state) }}">
+            <span class="state-dot" [class.state-dot--firing]="alert.status?.state === 'firing'"></span>
+            {{ alert.status?.state || '—' }}
+          </span>
+          <span class="alert-ns" *ngIf="alert.labels?.namespace">
+            <i class="pi pi-box"></i> {{ alert.labels.namespace }}
+          </span>
+          <span class="alert-time">
+            <i class="pi pi-clock"></i> {{ formatDate(alert.startsAt) }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,70 @@
+@import 'styles/theme';
+@import 'app/pages-shared';
+
+.filter-row { align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+
+// ── Fix z-index dropdown PrimeNG ─────────────────────────────────────────────
+.panel {
+  overflow: visible !important;
+}
+
+.dropdown-wrapper {
+  position: relative;
+}
+
+// ── Contrôles WS / auto-refresh ──────────────────────────────────────────────
+.ws-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: auto;
+
+  &__refresh {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #7a9a8a;
+      cursor: pointer;
+    }
+  }
+
+  &__interval {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    label, span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #7a9a8a;
+    }
+  }
+}
+
+// ── Badge Live ────────────────────────────────────────────────────────────────
+.live-badge__dot--static {
+  animation: none;
+  background: #f59e0b;
+}
+
+// ── Sous-titre panel ─────────────────────────────────────────────────────────
+.panel__title-sub {
+  font-size: 11px;
+  color: #3a5a50;
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+// ── Bouton stop (rouge) ───────────────────────────────────────────────────────
+.back-btn--danger {
+  border-color: #ef4444;
+  color: #ef4444;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+}

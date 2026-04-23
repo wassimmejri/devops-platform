@@ -1,0 +1,101 @@
+<p-toast></p-toast>
+
+<div class="bg-grid"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div style="display:flex; align-items:center; gap:14px">
+      <button class="back-btn" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="page-header__title">Historique des Déploiements</h1>
+        <p class="page-header__sub">{{ deployments.length }} déploiement(s)</p>
+      </div>
+    </div>
+    <button class="back-btn" (click)="loadDeployments()">
+      <i class="pi pi-refresh"></i> Rafraîchir
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-mini">
+      <div class="stat-mini__label">Total</div>
+      <div class="stat-mini__value stat-mini__value--white">{{ deployments.length }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Succès</div>
+      <div class="stat-mini__value stat-mini__value--green">{{ deployments | deploymentFilter:'success' }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">En cours</div>
+      <div class="stat-mini__value stat-mini__value--yellow">{{ deployments | deploymentFilter:'building' }}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini__label">Échoués</div>
+      <div class="stat-mini__value stat-mini__value--red">{{ deployments | deploymentFilter:'failed' }}</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+
+  <!-- Timeline -->
+  <div *ngIf="!loading" class="timeline">
+
+    <div *ngFor="let d of deployments" class="deploy-card"
+         [class.deploy-card--success]="d.status === 'success'"
+         [class.deploy-card--failed]="d.status === 'failed'"
+         [class.deploy-card--building]="d.status === 'building' || d.status === 'deploying'">
+
+      <div class="deploy-card__body">
+        <div class="deploy-card__left">
+          <i [class]="getStatusIcon(d.status)" class="deploy-card__icon"
+             [class.deploy-card__icon--success]="d.status === 'success'"
+             [class.deploy-card__icon--failed]="d.status === 'failed'"
+             [class.deploy-card__icon--building]="d.status === 'building' || d.status === 'deploying'"
+             [class.deploy-card__icon--pending]="d.status === 'pending'"></i>
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px">
+              <span class="deploy-card__version">v{{ d.version }}</span>
+              <p-tag [value]="d.status" [severity]="getStatusSeverity(d.status)"></p-tag>
+              <span *ngIf="d.jenkins_build_number" class="deploy-card__build">Build #{{ d.jenkins_build_number }}</span>
+            </div>
+            <div class="deploy-card__meta">
+              <span><i class="pi pi-calendar"></i> {{ d.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngIf="d.finished_at"><i class="pi pi-flag"></i> {{ d.finished_at | date:'HH:mm' }}</span>
+              <span><i class="pi pi-clock"></i> {{ getDuration(d) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button *ngIf="d.build_logs" class="deploy-card__logs-btn" (click)="viewLogs(d)">
+          <i class="pi pi-align-left"></i> Logs
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div *ngIf="d.status === 'building' || d.status === 'deploying'" style="margin-top: 12px">
+        <p-progressBar mode="indeterminate"></p-progressBar>
+      </div>
+
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="deployments.length === 0" class="empty-state">
+      <i class="pi pi-history"></i>
+      <p>Aucun déploiement pour l'instant</p>
+      <span>Lancez votre premier déploiement depuis la page Microservices</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- Dialog Logs -->
+<p-dialog [header]="'Logs — Build #' + (selectedDeployment?.jenkins_build_number || '')"
+          [(visible)]="showLogsDialog" [modal]="true" [style]="{width: '820px'}">
+  <pre class="logs-pre">{{ selectedDeployment?.build_logs || 'Aucun log disponible' }}</pre>
+</p-dialog>

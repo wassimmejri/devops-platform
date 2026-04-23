@@ -1,0 +1,150 @@
+<p-toast></p-toast>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--green"></div>
+<div class="bg-glow bg-glow--blue"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div style="display:flex; align-items:center; gap:14px">
+      <button class="back-btn" routerLink="/dashboard">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="page-header__title">Logs centralisés</h1>
+        <p class="page-header__sub">Loki · {{ selectedNamespace || 'Sélectionnez un namespace' }}</p>
+      </div>
+    </div>
+
+    <!-- Rafraîchir uniquement en mode REST -->
+    <button class="back-btn"
+            *ngIf="!wsActive"
+            (click)="loadLogs(true)">
+      <i class="pi pi-refresh"></i> Rafraîchir
+    </button>
+  </div>
+
+  <!-- Contrôles -->
+  <div class="panel">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-sliders-h panel__title-icon"></i>
+        Filtres
+      </h3>
+    </div>
+
+    <div class="filter-row">
+
+      <!-- Namespace -->
+      <div class="filter-group">
+        <label>Namespace</label>
+        <div class="dropdown-wrapper">
+          <p-dropdown
+            [options]="namespaces"
+            [(ngModel)]="selectedNamespace"
+            (onChange)="onNamespaceChange()"
+            placeholder="Choisir un namespace"
+            appendTo="body"
+            styleClass="w-full"
+          ></p-dropdown>
+          <i *ngIf="loadingNamespaces" class="pi pi-spin pi-spinner dropdown-spinner"></i>
+        </div>
+      </div>
+
+      <!-- Pod -->
+      <div class="filter-group">
+        <label>Pod</label>
+        <div class="dropdown-wrapper">
+          <p-dropdown
+            [options]="podOptions"
+            [(ngModel)]="selectedPod"
+            (onChange)="onPodChange()"
+            placeholder="Tous les pods"
+            [disabled]="!selectedNamespace"
+            appendTo="body"
+            styleClass="w-full"
+          ></p-dropdown>
+          <i *ngIf="loadingPods" class="pi pi-spin pi-spinner dropdown-spinner"></i>
+        </div>
+      </div>
+
+      <!-- Bouton charger : mode REST uniquement -->
+      <div class="filter-group filter-group--button" *ngIf="!wsActive">
+        <button class="back-btn" (click)="loadLogs(true)" [disabled]="loadingLogs">
+          <i class="pi pi-search"></i> Charger les logs
+        </button>
+      </div>
+
+      <!-- Auto-refresh : mode REST + "tous les pods" uniquement -->
+      <div class="filter-group ws-controls"
+           *ngIf="!wsActive && selectedNamespace">
+        <div class="ws-controls__refresh">
+          <p-checkbox [(ngModel)]="autoRefresh"
+                      [binary]="true"
+                      (onChange)="toggleAutoRefresh()"
+                      [inputId]="'autoRefresh'">
+          </p-checkbox>
+          <label for="autoRefresh">Auto‑refresh</label>
+        </div>
+        <div class="ws-controls__interval" *ngIf="autoRefresh">
+          <label>Intervalle</label>
+          <p-dropdown
+            [options]="[5, 10, 15, 30]"
+            [(ngModel)]="refreshInterval"
+            (onChange)="onIntervalChange()"
+            appendTo="body"
+            styleClass="w-5rem"
+          ></p-dropdown>
+          <span>sec</span>
+        </div>
+      </div>
+
+      <!-- Badge Live : mode WebSocket uniquement -->
+      <div class="filter-group ws-controls" *ngIf="wsActive">
+        <span class="live-badge">
+          <span class="live-badge__dot"></span>
+          Live WebSocket
+        </span>
+        <button class="back-btn back-btn--danger" (click)="stopStreamPublic()">
+          <i class="pi pi-stop-circle"></i> Arrêter
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Logs Viewer -->
+  <div class="panel panel--wide" style="margin-top:20px;">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-align-left panel__title-icon"></i>
+        Logs
+        <span class="panel__title-sub">
+          {{ selectedPod ? selectedPod : 'tous les pods' }}
+        </span>
+      </h3>
+      <span class="live-badge" *ngIf="logs.length > 0">
+        <span class="live-badge__dot"
+              [class.live-badge__dot--static]="!wsActive">
+        </span>
+        {{ logs.length }} ligne(s)
+      </span>
+    </div>
+
+    <div *ngIf="loadingLogs" class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+
+    <div *ngIf="!loadingLogs && logs.length === 0" class="empty-state">
+      <i class="pi pi-align-left"></i>
+      <p>Aucun log à afficher</p>
+      <span>Sélectionnez un namespace et un pod</span>
+    </div>
+
+    <pre *ngIf="!loadingLogs && logs.length > 0"
+         class="logs-pre">{{ getLogsText() }}</pre>
+  </div>
+
+</div>
