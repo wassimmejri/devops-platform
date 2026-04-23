@@ -1,0 +1,25 @@
+# =====================
+# BACKEND (Flask / Python)
+# =====================
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+
+# =====================
+# FRONTEND (Angular)
+# =====================
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# =====================
+# ENV FILES (global)
+# =====================
+.env
+
+# =====================
+# OS FILES
+# =====================
+.DS_Store
+Thumbs.db
