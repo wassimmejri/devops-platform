@@ -2,3 +2,160 @@
 @import 'app/pages-shared';
 
 .stats-row { grid-template-columns: repeat(4, 1fr); }
+
+// ── Wrapper carte ─────────────────────────────────────────
+.microservice-card {
+  border: 1px solid $border-dim;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: $border-mid; }
+
+  &--deploying {
+    border-color: rgba(255, 171, 0, 0.25) !important;
+    background: rgba(255, 171, 0, 0.02);
+  }
+
+  &--error {
+    border-color: rgba(255, 82, 82, 0.20) !important;
+    background: rgba(255, 82, 82, 0.02);
+  }
+
+  .microservice-item {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+}
+
+// ── Microservice deploying icon ───────────────────────────
+.microservice-icon--spin {
+  border-color: rgba(255, 171, 0, 0.35) !important;
+  color: $status-warn !important;
+}
+
+// ── Bouton logs Jenkins ───────────────────────────────────
+.microservice-action--logs {
+  border-color: rgba(0, 180, 255, 0.20) !important;
+  color: $cyan-dim !important;
+
+  &:hover {
+    border-color: rgba(0, 180, 255, 0.45) !important;
+    color: $cyan-bright !important;
+    background: rgba(0, 180, 255, 0.08) !important;
+  }
+}
+
+// ── Pipeline stages ───────────────────────────────────────
+.pipeline-stages {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px 10px;
+  border-top: 1px solid $border-dim;
+  overflow-x: auto;
+  gap: 0;
+
+  &::-webkit-scrollbar { height: 2px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,180,255,0.15); border-radius: 2px; }
+}
+
+.pipeline-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  flex: 1;
+  min-width: 60px;
+
+  &__icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.3s;
+    border: 1px solid $border-dim;
+    background: $bg-item;
+    color: $text-dim;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__label {
+    font-family: $mono;
+    font-size: 9px;
+    color: $text-dim;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  &__connector {
+    position: absolute;
+    top: 14px;
+    left: calc(50% + 14px);
+    right: calc(-50% + 14px);
+    height: 1px;
+    background: $border-dim;
+    z-index: 0;
+  }
+
+  &--done {
+    .pipeline-stage__icon {
+      background: rgba(0, 230, 118, 0.12);
+      border-color: rgba(0, 230, 118, 0.35);
+      color: $status-success;
+    }
+    .pipeline-stage__label { color: $status-success; }
+    .pipeline-stage__connector { background: rgba(0, 230, 118, 0.35); }
+  }
+
+  &--active {
+    .pipeline-stage__icon {
+      background: rgba(255, 171, 0, 0.12);
+      border-color: rgba(255, 171, 0, 0.45);
+      color: $status-warn;
+      animation: pulse-warn 1.5s infinite;
+    }
+    .pipeline-stage__label { color: $status-warn; font-weight: 700; }
+  }
+
+  &--error {
+    .pipeline-stage__icon {
+      background: rgba(255, 82, 82, 0.12);
+      border-color: rgba(255, 82, 82, 0.35);
+      color: $status-error;
+    }
+    .pipeline-stage__label { color: $status-error; }
+  }
+
+  &--pending {
+    .pipeline-stage__icon { opacity: 0.4; }
+    .pipeline-stage__label { opacity: 0.4; }
+  }
+}
+
+@keyframes pulse-warn {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 171, 0, 0.25); }
+  50%       { box-shadow: 0 0 16px rgba(255, 171, 0, 0.50); }
+}
+
+// ── Logs pre ──────────────────────────────────────────────
+.logs-pre {
+  font-family: $mono;
+  font-size: 11px;
+  color: $cyan-mid;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-dim;
+  border-radius: 10px;
+  padding: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  margin: 0;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,180,255,0.20); border-radius: 2px; }
+}

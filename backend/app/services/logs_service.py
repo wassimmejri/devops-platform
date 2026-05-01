@@ -1,38 +1,35 @@
 import requests
 from os import getenv
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 LOKI_URL  = getenv('LOKI_URL')
-LOKI_HOST = getenv('LOKI_HOST')   # ← "loki.devops.local"
+LOKI_HOST = getenv('LOKI_HOST')
+HEADERS   = {'Host': LOKI_HOST} if LOKI_HOST else {}
 
-HEADERS = {'Host': LOKI_HOST} if LOKI_HOST else {}   # ← header Host forcé
+def _loki_params(query, limit, hours=24):
+    now   = datetime.now(timezone.utc)
+    start = now - timedelta(hours=hours)
+    return {
+        'query':     query,
+        'limit':     limit,
+        'start':     int(start.timestamp() * 1_000_000_000),  # ← nanosecondes
+        'end':       int(now.timestamp()   * 1_000_000_000),  # ← nanosecondes
+        'direction': 'backward',
+    }
 
 def get_logs(pod_name, namespace, limit=100):
     query = f'{{namespace="{namespace}", pod="{pod_name}"}}'
-    end   = datetime.utcnow()
-    start = end - timedelta(hours=1)
-
+    print(f'[DEBUG get_logs] query={query}')
     url = f"{LOKI_URL}/loki/api/v1/query_range"
-    response = requests.get(url, params={
-        'query':     query,
-        'limit':     limit,
-        'start':     int(start.timestamp() * 1e9),
-        'end':       int(end.timestamp()   * 1e9),
-        'direction': 'backward',
-    }, headers=HEADERS, timeout=10)   # ← ajouter headers=HEADERS
+    response = requests.get(url, params=_loki_params(query, limit),
+                            headers=HEADERS, timeout=10)
+    print(f'[DEBUG get_logs] status={response.status_code}')
     return response.json()
 
 def get_namespace_logs(namespace, limit=200):
     query = f'{{namespace="{namespace}"}}'
-    end   = datetime.utcnow()
-    start = end - timedelta(hours=1)
-
     url = f"{LOKI_URL}/loki/api/v1/query_range"
-    response = requests.get(url, params={
-        'query':     query,
-        'limit':     limit,
-        'start':     int(start.timestamp() * 1e9),
-        'end':       int(end.timestamp()   * 1e9),
-        'direction': 'backward',
-    }, headers=HEADERS, timeout=10)   # ← ajouter headers=HEADERS
+    response = requests.get(url, params=_loki_params(query, limit),
+                            headers=HEADERS, timeout=10)
+    print(f'[DEBUG get_namespace_logs] status={response.status_code}, ns={namespace}')
     return response.json()

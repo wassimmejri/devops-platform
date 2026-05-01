@@ -1,0 +1,62 @@
+<div class="terminal">
+
+  <!-- Header style macOS -->
+  <div class="terminal__header">
+    <div class="terminal__dots">
+      <span class="dot dot--red"></span>
+      <span class="dot dot--yellow"></span>
+      <span class="dot dot--green"></span>
+    </div>
+    <span class="terminal__title">
+      {{ jobName }} — Build #{{ buildNumber }}
+    </span>
+    <span class="terminal__status"
+          [class.terminal__status--running]="isRunning"
+          [class.terminal__status--success]="result === 'SUCCESS'"
+          [class.terminal__status--failed]="result === 'FAILURE'">
+      <i class="pi" [ngClass]="{
+        'pi-spin pi-spinner': isRunning,
+        'pi-check-circle':    result === 'SUCCESS',
+        'pi-times-circle':    result === 'FAILURE'
+      }"></i>
+      {{ isRunning ? 'En cours...' : result }}
+    </span>
+  </div>
+
+  <!-- Body terminal -->
+  <div class="terminal__body" #terminalBody>
+
+    <div class="terminal__line" *ngFor="let line of lines">
+      <span class="terminal__prompt">$</span>
+      <span class="terminal__text"
+            [class.terminal__text--error]="isErrorLine(line)"
+            [class.terminal__text--success]="isSuccessLine(line)"
+            [class.terminal__text--warning]="isWarningLine(line)">
+        {{ line }}
+      </span>
+    </div>
+
+    <!-- Curseur clignotant -->
+    <div class="terminal__cursor" *ngIf="isRunning">▋</div>
+
+    <!-- Message si vide -->
+    <div class="terminal__empty" *ngIf="lines.length === 0">
+      <i class="pi pi-spin pi-spinner"></i>
+      Connexion au pipeline...
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="terminal__footer">
+    <span class="terminal__footer-info">
+      <i class="pi pi-circle-fill"></i>
+      {{ lines.length }} ligne(s)
+    </span>
+    <span class="terminal__footer-info" *ngIf="!isRunning">
+      <i class="pi pi-clock"></i>
+      Build terminé
+    </span>
+  </div>
+
+</div>

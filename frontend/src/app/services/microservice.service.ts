@@ -34,4 +34,21 @@ export class MicroserviceService {
   getDeployments(microserviceId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/microservices/${microserviceId}/deployments`);
   }
+
+  // ← AJOUT
+  syncStatus(microserviceId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/jenkins/sync/${microserviceId}`, {});
+  }
+
+  getJenkinsLogs(jobName: string): Observable<any> {
+  return this.http.get(`${this.apiUrl}/jenkins/logs/${jobName}/lastBuild`);
+}
+
+getAllRecentDeployments(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/jenkins/deployments/recent`);
+}
+
+getLastBuildInfo(jobName: string): Observable<any> {
+  return this.http.get(`${this.apiUrl}/jenkins/status/${jobName}`);
+}
 }

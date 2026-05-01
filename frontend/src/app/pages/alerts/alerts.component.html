@@ -1,7 +1,7 @@
 <p-toast></p-toast>
 
 <div class="bg-grid"></div>
-<div class="bg-glow bg-glow--green"></div>
+<div class="bg-glow bg-glow--red"></div>
 <div class="bg-glow bg-glow--blue"></div>
 
 <div class="page">
@@ -16,8 +16,8 @@
         <h1 class="page-header__title">Alertes</h1>
         <p class="page-header__sub">
           AlertManager ·
-          <span *ngIf="wsActive">Live WebSocket</span>
-          <span *ngIf="!wsActive">Chargement...</span>
+          <span *ngIf="wsActive" class="text-green-400">Live WebSocket</span>
+          <span *ngIf="!wsActive" class="text-yellow-400">Connexion...</span>
         </p>
       </div>
     </div>
@@ -29,19 +29,19 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
+  <!-- Stats Cards -->
   <div class="stats-row">
-    <div class="stat-mini stat-mini--red">
+    <div class="stat-mini stat-mini--critical">
       <div class="stat-mini__label">Critical</div>
       <div class="stat-mini__value stat-mini__value--red">{{ summary.critical }}</div>
     </div>
-    <div class="stat-mini stat-mini--yellow">
+    <div class="stat-mini stat-mini--warning">
       <div class="stat-mini__label">Warning</div>
       <div class="stat-mini__value stat-mini__value--yellow">{{ summary.warning }}</div>
     </div>
-    <div class="stat-mini stat-mini--blue">
+    <div class="stat-mini stat-mini--info">
       <div class="stat-mini__label">Info</div>
-      <div class="stat-mini__value stat-mini__value--white">{{ summary.info }}</div>
+      <div class="stat-mini__value stat-mini__value--blue">{{ summary.info }}</div>
     </div>
     <div class="stat-mini">
       <div class="stat-mini__label">Total</div>
@@ -65,7 +65,7 @@
         <label>Sévérité</label>
         <p-dropdown
           [options]="[
-            {label: 'Toutes', value: ''},
+            {label: 'Toutes',   value: ''},
             {label: 'Critical', value: 'critical'},
             {label: 'Warning',  value: 'warning'},
             {label: 'Info',     value: 'info'}
@@ -76,23 +76,41 @@
         ></p-dropdown>
       </div>
       <div class="filter-group">
+        <label>État</label>
+        <p-dropdown
+          [options]="[
+            {label: 'Tous',    value: ''},
+            {label: 'Firing',  value: 'firing'},
+            {label: 'Pending', value: 'pending'}
+          ]"
+          [(ngModel)]="stateFilter"
+          appendTo="body"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+      <div class="filter-group">
         <label>Nom de l'alerte</label>
-        <input type="text"
-               class="filter-input"
-               placeholder="Rechercher..."
-               [(ngModel)]="nameFilter" />
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="Rechercher..."
+          [(ngModel)]="nameFilter"
+        />
       </div>
     </div>
   </div>
 
-  <!-- Alerts Table -->
-  <div class="panel panel--wide" style="margin-top:20px">
+  <!-- Alerts Panel -->
+  <div class="panel" style="margin-top:20px">
     <div class="panel__header">
       <h3 class="panel__title">
         <i class="pi pi-bell panel__title-icon"></i>
         Alertes actives
-        <span class="panel__title-sub">{{ filteredAlerts.length }} résultat(s)</span>
       </h3>
+      <span class="live-badge">
+        <span class="live-badge__dot"></span>
+        {{ filteredAlerts.length }} résultat(s)
+      </span>
     </div>
 
     <div *ngIf="loading" class="loading-state">
@@ -106,39 +124,46 @@
     </div>
 
     <div *ngIf="!loading && filteredAlerts.length > 0" class="alert-list">
-      <div class="alert-item"
-           *ngFor="let alert of filteredAlerts"
-           [class.alert-item--critical]="alert.labels?.severity === 'critical'"
-           [class.alert-item--warning]="alert.labels?.severity === 'warning'">
-
-        <div class="alert-left">
-          <i class="pi {{ getSeverityIcon(alert.labels?.severity) }} alert-icon"
-             [class.alert-icon--critical]="alert.labels?.severity === 'critical'"
-             [class.alert-icon--warning]="alert.labels?.severity === 'warning'"
-             [class.alert-icon--info]="!alert.labels?.severity || alert.labels?.severity === 'info'">
-          </i>
-          <div>
+      <div
+        class="alert-item"
+        *ngFor="let alert of filteredAlerts; let i = index"
+        [class.alert-item--critical]="alert.labels?.severity === 'critical'"
+        [class.alert-item--warning]="alert.labels?.severity === 'warning'"
+        [style.animation-delay]="i * 0.05 + 's'"
+      >
+        <div class="alert-item__left">
+          <div class="alert-icon-wrap"
+               [class.alert-icon-wrap--critical]="alert.labels?.severity === 'critical'"
+               [class.alert-icon-wrap--warning]="alert.labels?.severity === 'warning'"
+               [class.alert-icon-wrap--info]="!alert.labels?.severity || alert.labels?.severity === 'info'">
+            <i class="pi {{ getSeverityIcon(alert.labels?.severity) }}"></i>
+          </div>
+          <div class="alert-info">
             <div class="alert-name">{{ alert.labels?.alertname || 'Alerte inconnue' }}</div>
-            <div class="alert-summary">{{ alert.annotations?.summary || alert.annotations?.description || '—' }}</div>
+            <div class="alert-summary">
+              {{ alert.annotations?.summary || alert.annotations?.description || '—' }}
+            </div>
           </div>
         </div>
 
-        <div class="alert-right">
-          <span class="alert-badge {{ getSeverityClass(alert.labels?.severity) }}">
+        <div class="alert-item__right">
+          <span class="alert-badge alert-badge--{{ alert.labels?.severity || 'info' }}">
             {{ alert.labels?.severity || 'info' }}
           </span>
           <span class="alert-state {{ getStatusClass(alert.status?.state) }}">
             <span class="state-dot" [class.state-dot--firing]="alert.status?.state === 'firing'"></span>
             {{ alert.status?.state || '—' }}
           </span>
-          <span class="alert-ns" *ngIf="alert.labels?.namespace">
+          <span class="alert-meta" *ngIf="alert.labels?.namespace">
             <i class="pi pi-box"></i> {{ alert.labels.namespace }}
           </span>
-          <span class="alert-time">
+          <span class="alert-meta">
             <i class="pi pi-clock"></i> {{ formatDate(alert.startsAt) }}
           </span>
+          <button class="alert-silence-btn" title="Silencer l'alerte">
+            <i class="pi pi-volume-off"></i>
+          </button>
         </div>
-
       </div>
     </div>
   </div>

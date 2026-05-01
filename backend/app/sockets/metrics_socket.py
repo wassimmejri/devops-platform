@@ -1,7 +1,7 @@
 import eventlet
 from flask import request
 from flask_socketio import Namespace
-from app.services.metrics_service import get_metric
+from app.services.metrics_service import get_metric, get_history_metrics
 
 QUERIES = {
     'cpu': '(1 - avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m]))) * 100',
@@ -26,16 +26,24 @@ class MetricsNamespace(Namespace):
         print(f'[WS /metrics] watch_metrics → interval={interval}s, sid={sid}')
 
         def stream():
+            count = 0
             while True:
                 try:
+                    # Métriques instantanées (votre code existant)
                     payload = {
                         key: get_metric(query)
                         for key, query in QUERIES.items()
                     }
-                    print(f'[DEBUG payload] {payload}')   # ← ajouter
-
                     self.socketio.emit('metrics_update', payload,
                                        namespace='/metrics', room=sid)
+
+                    # 🔥 NOUVEAU : historique toutes les 3 itérations
+                    count += 1
+                    if count % 3 == 0:
+                        history = get_history_metrics(minutes=5, step=15)
+                        self.socketio.emit('history_update', history,
+                                           namespace='/metrics', room=sid)
+
                 except Exception as e:
                     print(f'[WS /metrics] Erreur: {e}')
                     self.socketio.emit('error', {'msg': str(e)},

@@ -36,6 +36,18 @@ class LogsNamespace(Namespace):
                 try:
                     result  = get_logs(pod, namespace, limit=200)
                     streams = result.get('data', {}).get('result', [])
+
+                    # ── DEBUG ──────────────────────────────────────────────
+                    print(f'[DEBUG socket] streams count={len(streams)}')
+                    if streams:
+                        first_values = streams[0].get('values', [])
+                        print(f'[DEBUG socket] first stream values count={len(first_values)}')
+                        if first_values:
+                            print(f'[DEBUG socket] sample value={first_values[0]}')
+                    else:
+                        print(f'[DEBUG socket] result complet={result}')
+                    # ───────────────────────────────────────────────────────
+
                     new_lines = []
                     for stream_entry in streams:
                         for ts, raw_line in stream_entry.get('values', []):
@@ -46,6 +58,9 @@ class LogsNamespace(Namespace):
                                 'ts':   ts,
                                 'line': self._parse_line(raw_line),
                             })
+
+                    print(f'[DEBUG socket] new_lines={len(new_lines)}, seen total={len(seen)}')
+
                     if new_lines:
                         new_lines.sort(key=lambda x: x['ts'])
                         self.socketio.emit(
@@ -55,15 +70,19 @@ class LogsNamespace(Namespace):
                             room=sid,
                         )
                         print(f'[WS /logs] {len(new_lines)} lignes envoyées → {sid}')
+                    else:
+                        print(f'[DEBUG socket] aucune nouvelle ligne (tout déjà dans seen)')
+
                 except Exception as e:
                     print(f'[WS /logs] Erreur stream: {e}')
                     self.socketio.emit('error', {'msg': str(e)},
                                        namespace='/logs', room=sid)
+
                 eventlet.sleep(interval)
 
         eventlet.spawn(stream)
 
-    def _parse_line(self, raw_line: str) -> str:   # ← indenté dans la classe
+    def _parse_line(self, raw_line: str) -> str:
         try:
             obj = json.loads(raw_line)
             time = obj.get('time', '')

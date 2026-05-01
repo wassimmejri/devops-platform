@@ -18,6 +18,7 @@ export class AlertsComponent implements OnInit, OnDestroy {
   lastRefresh = '';
 
   severityFilter = '';
+  stateFilter = '';   // nouveau filtre
   nameFilter = '';
 
   private alertsSub?: Subscription;
@@ -30,7 +31,6 @@ export class AlertsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Chargement initial REST
     this.alertsService.getAlerts().subscribe({
       next: (data) => {
         this.alerts  = data;
@@ -40,7 +40,6 @@ export class AlertsComponent implements OnInit, OnDestroy {
       error: () => { this.loading = false; }
     });
 
-    // WebSocket temps réel
     this.alertsSub = this.socketService.watchAlerts(15).subscribe({
       next: (data: any) => {
         this.alerts   = data.alerts  || [];
@@ -72,12 +71,13 @@ export class AlertsComponent implements OnInit, OnDestroy {
 
   get filteredAlerts(): any[] {
     return this.alerts.filter(alert => {
-      const matchSev  = !this.severityFilter ||
+      const matchSev   = !this.severityFilter ||
         alert.labels?.severity?.toLowerCase() === this.severityFilter;
-      const matchName = !this.nameFilter ||
-        alert.labels?.alertname?.toLowerCase()
-          .includes(this.nameFilter.toLowerCase());
-      return matchSev && matchName;
+      const matchState = !this.stateFilter ||
+        alert.status?.state?.toLowerCase() === this.stateFilter;
+      const matchName  = !this.nameFilter ||
+        alert.labels?.alertname?.toLowerCase().includes(this.nameFilter.toLowerCase());
+      return matchSev && matchState && matchName;
     });
   }
 
@@ -109,5 +109,6 @@ export class AlertsComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.severityFilter = '';
     this.nameFilter     = '';
+    this.stateFilter    = '';
   }
 }

@@ -578,6 +578,22 @@
 .deployment-name { font-family: $mono; font-size: 13px; font-weight: 500; color: $text-primary; }
 .deployment-ns   { font-family: $mono; font-size: 11px; color: $text-dim; }
 
+.deployment-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.deployment-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--success  { background: $status-success; box-shadow: 0 0 6px rgba(0,230,118,0.5); }
+  &--building { background: $status-warn;    box-shadow: 0 0 6px rgba(255,171,0,0.4); animation: pulse-cyan 1.5s infinite; }
+  &--failed   { background: $status-error;   box-shadow: 0 0 6px rgba(255,82,82,0.4); }
+}
+
 // ══════════════════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════════════════
@@ -664,4 +680,275 @@
       gap: 8px !important;
     }
   }
+
+  // ══════════════════════════════════════════════════════════
+// TIMELINE DES DÉPLOIEMENTS
+// ══════════════════════════════════════════════════════════
+.timeline {
+  position: relative;
+  padding-left: 30px; // espace pour la ligne et les marqueurs
+  margin-top: 8px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(0,200,255,0.3), rgba(0,200,255,0.05));
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -23px; // aligné sur la ligne (15px - moitié de la largeur du marqueur)
+  top: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: $border-dim;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+
+  .marker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $border-mid;
+  }
+
+  &--success {
+    background: rgba(0,230,118,0.15);
+    .marker-dot { background: $status-success; box-shadow: 0 0 8px rgba(0,230,118,0.6); }
+  }
+  &--building {
+    background: rgba(255,171,0,0.15);
+    .marker-dot { background: $status-warn; box-shadow: 0 0 8px rgba(255,171,0,0.6); }
+  }
+  &--failed {
+    background: rgba(255,82,82,0.15);
+    .marker-dot { background: $status-error; box-shadow: 0 0 8px rgba(255,82,82,0.6); }
+  }
+}
+
+.marker-pulse {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,171,0,0.4);
+  animation: pulse-marker 1.5s infinite;
+}
+
+@keyframes pulse-marker {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.timeline-card {
+  flex: 1;
+  background: $bg-item;
+  border: 1px solid $border-dim;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: $border-mid;
+    background: rgba(0, 180, 255, 0.04);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  &__details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: $mono;
+    font-size: 11px;
+    color: $text-dim;
+
+    i { margin-right: 4px; opacity: 0.7; }
+    span { display: inline-flex; align-items: center; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MINI GAUGE CIRCULAIRE
+// ══════════════════════════════════════════════════════════
+.mini-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  &__svg {
+    width: 38px;
+    height: 38px;
+  }
+
+  &__bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.08);
+    stroke-width: 3.8;
+  }
+
+  &__fill {
+    fill: none;
+    stroke-width: 3.8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.4s ease;
+
+    &--cyan   { stroke: $cyan-mid; }
+    &--purple { stroke: #a78bfa; }
+  }
+
+  &__text {
+    font-family: $mono;
+    font-size: 7px;
+    fill: $text-primary;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  &__label {
+    font-family: $mono;
+    font-size: 9px;
+    color: $text-dim;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+}
+
+.node-right {
+  display: flex;
+  align-items: center;
+  gap: 16px; // espace entre les jauges et le tag
+}
+
+// ══════════════════════════════════════════════════════════
+// PANEL ALERTES
+// ══════════════════════════════════════════════════════════
+.alerts-panel {
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 171, 0, 0.25);
+  background: rgba(255, 171, 0, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+}
+
+.alerts-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-family: $display;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  user-select: none;
+
+  &:hover { background: rgba(255,171,0,0.08); }
+
+  &__icon { font-size: 18px; }
+  &__text { flex: 1; }
+  &__count { color: $status-warn; margin-left: 4px; }
+
+  &__badges {
+    display: flex;
+    gap: 8px;
+    margin-right: 8px;
+  }
+}
+
+.alerts-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: $mono;
+  font-size: 10px;
+  font-weight: 700;
+
+  &--critical { background: rgba(255,82,82,0.15); color: $status-error; border: 1px solid rgba(255,82,82,0.3); }
+  &--warning  { background: rgba(255,171,0,0.15); color: $status-warn; border: 1px solid rgba(255,171,0,0.3); }
+  &--info     { background: rgba(0,200,255,0.15); color: $cyan-bright; border: 1px solid rgba(0,200,255,0.3); }
+}
+
+.alerts-body {
+  border-top: 1px solid rgba(255,171,0,0.2);
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-family: $mono;
+  font-size: 12px;
+  color: $text-muted;
+
+  &:last-child { border-bottom: none; }
+
+  .alert-summary { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert-time { color: $text-dim; font-size: 10px; white-space: nowrap; }
+}
+
+.empty-alerts {
+  padding: 20px;
+  text-align: center;
+  color: rgba(0,200,100,0.6);
+  font-family: $mono;
+  font-size: 13px;
+}
+
+// ══════════════════════════════════════════════════════════
+// BARRE DE PROGRESSION SHIMMER POUR TIMELINE
+// ══════════════════════════════════════════════════════════
+.custom-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 229, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 10px;
+
+  &__fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 229, 255, 0.5) 30%,
+      rgba(0, 229, 255, 0.8) 50%,
+      rgba(0, 229, 255, 0.5) 70%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 }

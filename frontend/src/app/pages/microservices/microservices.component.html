@@ -1,4 +1,5 @@
 <p-toast></p-toast>
+<p-confirmDialog [style]="{width: '420px'}"></p-confirmDialog>
 
 <div class="bg-grid"></div>
 <div class="bg-glow bg-glow--green"></div>
@@ -60,31 +61,76 @@
       </span>
     </div>
 
-    <!-- Liste des microservices sous forme de cartes -->
     <div class="microservice-list">
-      <div class="microservice-item" *ngFor="let ms of microservices">
-        <div class="microservice-item__left">
-          <div class="microservice-icon">
-            <i class="pi pi-cog"></i>
-          </div>
-          <div class="microservice-info">
-            <div class="microservice-name">{{ ms.name }}</div>
-            <div class="microservice-details">
-              <span class="microservice-detail"><i class="pi pi-tag"></i> {{ ms.image || '—' }}</span>
-              <span class="microservice-detail"><i class="pi pi-sitemap"></i> Port {{ ms.port }}</span>
-              <span class="microservice-detail"><i class="pi pi-copy"></i> {{ ms.replicas }} replica(s)</span>
+      <div class="microservice-card"
+           [class.microservice-card--deploying]="isDeploying(ms)"
+           [class.microservice-card--error]="ms.status === 'error'"
+           *ngFor="let ms of microservices">
+
+        <!-- Ligne principale -->
+        <div class="microservice-item">
+          <div class="microservice-item__left">
+            <div class="microservice-icon" [class.microservice-icon--spin]="isDeploying(ms)">
+              <i class="pi"
+                 [class.pi-cog]="!isDeploying(ms)"
+                 [class.pi-spin]="isDeploying(ms)"
+                 [class.pi-spinner]="isDeploying(ms)">
+              </i>
+            </div>
+            <div class="microservice-info">
+              <div class="microservice-name">{{ ms.name }}</div>
+              <div class="microservice-details">
+                <span class="microservice-detail"><i class="pi pi-tag"></i> {{ ms.image || '—' }}</span>
+                <span class="microservice-detail"><i class="pi pi-sitemap"></i> Port {{ ms.port }}</span>
+                <span class="microservice-detail"><i class="pi pi-copy"></i> {{ ms.replicas }} replica(s)</span>
+              </div>
             </div>
           </div>
+
+          <div class="microservice-item__right">
+            <p-tag [value]="ms.status || 'unknown'" [severity]="getStatusSeverity(ms.status)"></p-tag>
+
+            <button class="microservice-action microservice-action--logs"
+                    *ngIf="showLogsBtn(ms)"
+                    (click)="viewJenkinsLogs(ms)"
+                    title="Logs Jenkins">
+              <i class="pi pi-align-left"></i>
+            </button>
+
+            <button class="microservice-action"
+                    (click)="confirmDeploy(ms, $event)"
+                    [disabled]="isDeploying(ms)"
+                    title="Déployer">
+              <i class="pi pi-play"></i>
+            </button>
+
+            <button class="microservice-action" (click)="viewDeployments(ms)" title="Historique">
+              <i class="pi pi-history"></i>
+            </button>
+          </div>
         </div>
-        <div class="microservice-item__right">
-          <p-tag [value]="ms.status || 'unknown'" [severity]="getStatusSeverity(ms.status)"></p-tag>
-          <button class="microservice-action" (click)="deploy(ms)" title="Déployer">
-            <i class="pi pi-play"></i>
-          </button>
-          <button class="microservice-action" (click)="viewDeployments(ms)" title="Historique">
-            <i class="pi pi-history"></i>
-          </button>
+
+        <!-- Pipeline stages -->
+        <div class="pipeline-stages" *ngIf="isDeploying(ms)">
+          <div class="pipeline-stage"
+               *ngFor="let stage of pipelineStages; let i = index"
+               [class]="'pipeline-stage--' + getStageStatus(ms.id, i, ms.status)">
+            <div class="pipeline-stage__connector" *ngIf="i < pipelineStages.length - 1"></div>
+            <div class="pipeline-stage__icon">
+              <i class="pi"
+                 [class.pi-spin]="getStageStatus(ms.id, i, ms.status) === 'active'"
+                 [ngClass]="{
+                   'pi-spinner': getStageStatus(ms.id, i, ms.status) === 'active',
+                   'pi-check':   getStageStatus(ms.id, i, ms.status) === 'done',
+                   'pi-times':   getStageStatus(ms.id, i, ms.status) === 'error',
+                   'pi-circle':  getStageStatus(ms.id, i, ms.status) === 'pending'
+                 }">
+              </i>
+            </div>
+            <div class="pipeline-stage__label">{{ stage.label }}</div>
+          </div>
         </div>
+
       </div>
 
       <!-- Empty state -->
@@ -105,20 +151,20 @@
   [style]="{width: '500px'}"
 >
   <div class="flex flex-column gap-4 pt-4">
-    <div class="flex flex-column gap-2">
-      <label class="text-gray-300">Nom *</label>
+    <div class="form-group">
+      <label>Nom *</label>
       <input pInputText [(ngModel)]="newMicroservice.name" placeholder="user-service" />
     </div>
-    <div class="flex flex-column gap-2">
-      <label class="text-gray-300">Image Docker</label>
+    <div class="form-group">
+      <label>Image Docker</label>
       <input pInputText [(ngModel)]="newMicroservice.image" placeholder="wassim/user-service:latest" />
     </div>
-    <div class="flex flex-column gap-2">
-      <label class="text-gray-300">Port</label>
+    <div class="form-group">
+      <label>Port</label>
       <input pInputText type="number" [(ngModel)]="newMicroservice.port" />
     </div>
-    <div class="flex flex-column gap-2">
-      <label class="text-gray-300">Replicas</label>
+    <div class="form-group">
+      <label>Replicas</label>
       <input pInputText type="number" [(ngModel)]="newMicroservice.replicas" />
     </div>
   </div>
@@ -126,4 +172,35 @@
     <p-button label="Annuler" severity="secondary" (onClick)="showCreateDialog = false"></p-button>
     <p-button label="Ajouter" icon="pi pi-plus" (onClick)="createMicroservice()"></p-button>
   </ng-template>
+</p-dialog>
+
+<!-- Dialog Logs Jenkins -->
+<!-- Dialog Terminal Jenkins Live -->
+<p-dialog
+  header="Pipeline Live — {{ terminalJobName }}"
+  [(visible)]="showTerminalDialog"
+  [modal]="true"
+  [style]="{width: '860px'}"
+  [draggable]="true"
+  (onHide)="showTerminalDialog = false"
+>
+  <app-terminal-logs
+    *ngIf="showTerminalDialog"
+    [jobName]="terminalJobName"
+    [buildNumber]="terminalBuildNum"
+  ></app-terminal-logs>
+</p-dialog>
+
+<!-- Dialog Logs statiques -->
+<p-dialog
+  [header]="logsDialogTitle"
+  [(visible)]="showLogsDialog"
+  [modal]="true"
+  [style]="{width: '860px'}"
+  [draggable]="true"
+>
+  <div *ngIf="loadingLogs" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+  </div>
+  <pre *ngIf="!loadingLogs" class="logs-pre">{{ logsContent }}</pre>
 </p-dialog>

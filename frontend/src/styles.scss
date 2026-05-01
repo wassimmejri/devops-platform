@@ -60,7 +60,6 @@ html, body {
     overflow: hidden;
     position: relative;
 
-    // Ligne de scan décorative en haut
     &::before {
       content: '';
       position: absolute;
@@ -75,14 +74,8 @@ html, body {
       align-items: flex-start;
       gap: 12px;
 
-      .p-toast-message-icon {
-        font-size: 18px !important;
-        margin-top: 1px;
-      }
-
-      .p-toast-message-text {
-        flex: 1;
-      }
+      .p-toast-message-icon { font-size: 18px !important; margin-top: 1px; }
+      .p-toast-message-text { flex: 1; }
 
       .p-toast-summary {
         font-family: $display !important;
@@ -108,50 +101,38 @@ html, body {
       }
     }
 
-    // ── SUCCESS ──────────────────────────────────────────
     &.p-toast-message-success {
       background: rgba(0, 30, 20, 0.80) !important;
       border-color: $status-success !important;
       color: #b9f5d0 !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
-                  0 0 20px rgba(0,230,118,0.12) !important;
-
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 20px rgba(0,230,118,0.12) !important;
       .p-toast-message-icon { color: $status-success !important; }
       .p-toast-summary { color: #e0fff0 !important; }
     }
 
-    // ── INFO ─────────────────────────────────────────────
     &.p-toast-message-info {
       background: rgba(0, 20, 45, 0.82) !important;
       border-color: $cyan-bright !important;
       color: #b0e8f8 !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
-                  0 0 20px rgba(0,200,255,0.12) !important;
-
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 20px rgba(0,200,255,0.12) !important;
       .p-toast-message-icon { color: $cyan-bright !important; }
       .p-toast-summary { color: #e0f8ff !important; }
     }
 
-    // ── WARNING ───────────────────────────────────────────
     &.p-toast-message-warn {
       background: rgba(30, 20, 0, 0.82) !important;
       border-color: $status-warn !important;
       color: #ffe9a0 !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
-                  0 0 20px rgba(255,171,0,0.10) !important;
-
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 20px rgba(255,171,0,0.10) !important;
       .p-toast-message-icon { color: $status-warn !important; }
       .p-toast-summary { color: #fff3cc !important; }
     }
 
-    // ── ERROR ─────────────────────────────────────────────
     &.p-toast-message-error {
       background: rgba(30, 8, 8, 0.82) !important;
       border-color: $status-error !important;
       color: #ffbdbd !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45),
-                  0 0 20px rgba(255,82,82,0.12) !important;
-
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 20px rgba(255,82,82,0.12) !important;
       .p-toast-message-icon { color: $status-error !important; }
       .p-toast-summary { color: #ffe0e0 !important; }
     }
@@ -175,7 +156,6 @@ html, body {
               0 0 0 1px rgba(0,200,255,0.06),
               0 0 40px rgba(0,150,255,0.08) !important;
 
-  // Ligne cyan décorative en haut
   &::before {
     content: '';
     display: block;
@@ -230,16 +210,83 @@ html, body {
   }
 }
 
-// ── Confirm Dialog spécifique ─────────────────────────────
+// ══════════════════════════════════════════════════════════
+// ── CONFIRM DIALOG ── Glassmorphism (remplace confirmPopup)
+// ══════════════════════════════════════════════════════════
+
+// Masque de fond
+.p-dialog-mask.p-component-overlay {
+  backdrop-filter: blur(8px) !important;
+  background: rgba(2, 8, 16, 0.70) !important;
+}
+
+// Le dialog de confirmation hérite du .p-dialog global,
+// ces règles spécifiques surchargent ce qui est nécessaire
 .p-confirm-dialog {
+
+  // Icône centrale (cloud-upload, etc.)
   .p-confirm-dialog-icon {
-    font-size: 28px !important;
+    font-size: 26px !important;
     color: $status-warn !important;
+    margin-bottom: 4px;
   }
+
+  // Message principal
   .p-confirm-dialog-message {
     font-family: $mono !important;
     font-size: 13px !important;
     color: $text-muted !important;
+    line-height: 1.7;
+    text-align: center;
+
+    // Le HTML injecté via [message] (strong tags)
+    strong {
+      color: $text-primary !important;
+      font-weight: 700;
+    }
+  }
+
+  // Zone contenu : icône + message centrés
+  .p-dialog-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 28px 28px 20px !important;
+    text-align: center;
+  }
+
+  // Footer avec les boutons
+  .p-dialog-footer {
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 16px 28px 24px !important;
+
+    // Bouton Annuler (secondary)
+    .p-button.p-button-secondary {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: $border-mid !important;
+      color: $text-muted !important;
+
+      &:hover {
+        border-color: $border-bright !important;
+        color: $text-primary !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+      }
+    }
+
+    // Bouton Déployer (warning)
+    .p-button.p-button-warning {
+      background: rgba(245, 158, 11, 0.14) !important;
+      border-color: rgba(245, 158, 11, 0.40) !important;
+      color: $status-warn !important;
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.24) !important;
+        border-color: $status-warn !important;
+        box-shadow: 0 0 16px rgba(245, 158, 11, 0.25) !important;
+      }
+    }
   }
 }
 
@@ -265,9 +312,8 @@ html, body {
   border-radius: 9px !important;
   color: $text-primary !important;
 
-  &:not(.p-disabled):hover {
-    border-color: $border-mid !important;
-  }
+  &:not(.p-disabled):hover { border-color: $border-mid !important; }
+
   &.p-focus, &.p-inputwrapper-focus {
     border-color: rgba(0,200,255,0.35) !important;
     box-shadow: 0 0 0 2px rgba(0,200,255,0.07) !important;
@@ -288,6 +334,7 @@ html, body {
   border-radius: 12px !important;
   border-color: $border-mid !important;
   box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
+  z-index: 9999 !important;
 
   .p-dropdown-item, .p-multiselect-item {
     font-family: $mono !important;
@@ -308,10 +355,7 @@ html, body {
   }
 }
 
-// Input number
-.p-inputnumber-input {
-  @extend %input-base;
-}
+.p-inputnumber-input { @extend %input-base; }
 
 // ══════════════════════════════════════════════════════════
 // ── BUTTONS ── Glassmorphism
@@ -325,7 +369,6 @@ html, body {
 
   &:active { transform: scale(0.97) !important; }
 
-  // Default / Primary
   &:not(.p-button-outlined):not([class*="p-button-"]) {
     background: rgba(0, 150, 220, 0.20) !important;
     border-color: rgba(0, 180, 255, 0.35) !important;
@@ -337,11 +380,8 @@ html, body {
     }
   }
 
-  &.p-button-outlined {
-    background: transparent !important;
-  }
+  &.p-button-outlined { background: transparent !important; }
 
-  // Success
   &.p-button-success {
     background: rgba(0, 200, 100, 0.12) !important;
     border-color: rgba(0, 200, 100, 0.35) !important;
@@ -352,7 +392,6 @@ html, body {
     }
   }
 
-  // Danger
   &.p-button-danger {
     background: rgba(255, 82, 82, 0.10) !important;
     border-color: rgba(255, 82, 82, 0.30) !important;
@@ -363,7 +402,6 @@ html, body {
     }
   }
 
-  // Info / Cyan
   &.p-button-info {
     background: rgba(0, 180, 255, 0.12) !important;
     border-color: rgba(0, 180, 255, 0.30) !important;
@@ -375,7 +413,6 @@ html, body {
     }
   }
 
-  // Secondary
   &.p-button-secondary {
     background: rgba(255,255,255,0.04) !important;
     border-color: $border-mid !important;
@@ -386,17 +423,19 @@ html, body {
     }
   }
 
-  // Warning
   &.p-button-warning {
     background: rgba(255, 171, 0, 0.10) !important;
     border-color: rgba(255, 171, 0, 0.30) !important;
     color: $status-warn !important;
-    &:hover { background: rgba(255, 171, 0, 0.18) !important; }
+    &:hover {
+      background: rgba(255, 171, 0, 0.18) !important;
+      box-shadow: 0 0 12px rgba(255,171,0,0.20) !important;
+    }
   }
 }
 
 // ══════════════════════════════════════════════════════════
-// ── TAGS / BADGES ─────────────────────────────────────────
+// ── TAGS / BADGES
 // ══════════════════════════════════════════════════════════
 .p-tag {
   font-family: $mono !important;
@@ -428,7 +467,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── DATATABLE ─────────────────────────────────────────────
+// ── DATATABLE
 // ══════════════════════════════════════════════════════════
 .p-datatable {
   .p-datatable-thead > tr > th {
@@ -444,11 +483,7 @@ html, body {
 
   .p-datatable-tbody > tr {
     background: transparent !important;
-
-    &:hover > td {
-      background: rgba(0, 180, 255, 0.05) !important;
-    }
-
+    &:hover > td { background: rgba(0, 180, 255, 0.05) !important; }
     > td {
       border-color: $border-dim !important;
       color: $text-primary !important;
@@ -474,7 +509,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── PROGRESS BAR ──────────────────────────────────────────
+// ── PROGRESS BAR
 // ══════════════════════════════════════════════════════════
 .p-progressbar {
   background: rgba(0,180,255,0.08) !important;
@@ -489,7 +524,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── TOOLTIP ───────────────────────────────────────────────
+// ── TOOLTIP
 // ══════════════════════════════════════════════════════════
 .p-tooltip {
   .p-tooltip-text {
@@ -505,7 +540,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── PANEL / CARD PrimeNG ──────────────────────────────────
+// ── PANEL / CARD PrimeNG
 // ══════════════════════════════════════════════════════════
 .p-panel {
   @include glass-card;
@@ -527,7 +562,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── TABS ──────────────────────────────────────────────────
+// ── TABS
 // ══════════════════════════════════════════════════════════
 .p-tabview {
   .p-tabview-nav {
@@ -565,7 +600,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── CHIP ──────────────────────────────────────────────────
+// ── CHIP
 // ══════════════════════════════════════════════════════════
 .p-chip {
   background: rgba(0,180,255,0.10) !important;
@@ -577,28 +612,22 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── SKELETON ──────────────────────────────────────────────
+// ── SKELETON
 // ══════════════════════════════════════════════════════════
 .p-skeleton {
   background: rgba(0,150,255,0.07) !important;
   border-radius: 8px !important;
 
   &::after {
-    background: linear-gradient(90deg,
-      transparent,
-      rgba(0,200,255,0.07),
-      transparent
-    ) !important;
+    background: linear-gradient(90deg, transparent, rgba(0,200,255,0.07), transparent) !important;
   }
 }
 
 // ══════════════════════════════════════════════════════════
-// ── DIVIDER ───────────────────────────────────────────────
+// ── DIVIDER
 // ══════════════════════════════════════════════════════════
 .p-divider {
-  &::before {
-    border-color: $border-dim !important;
-  }
+  &::before { border-color: $border-dim !important; }
   .p-divider-content {
     background: transparent !important;
     font-family: $mono !important;
@@ -609,7 +638,7 @@ html, body {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── MENU / CONTEXT MENU ───────────────────────────────────
+// ── MENU / CONTEXT MENU
 // ══════════════════════════════════════════════════════════
 .p-menu, .p-contextmenu {
   @include glass-surface(0.92, 20px);
@@ -633,8 +662,9 @@ html, body {
 
     .p-menuitem-icon { color: $cyan-dim !important; margin-right: 10px; }
   }
-  // Fix global PrimeNG dropdown overlay
+}
+
+// Fix global PrimeNG dropdown overlay z-index
 .p-dropdown-panel {
   z-index: 9999 !important;
-}
 }

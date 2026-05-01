@@ -2,12 +2,11 @@
 
 <div class="dashboard">
 
-  <!-- Background effects -->
   <div class="bg-grid"></div>
   <div class="bg-glow bg-glow--green"></div>
   <div class="bg-glow bg-glow--blue"></div>
 
-  <!-- Page header -->
+  <!-- Header -->
   <div class="page-header">
     <div class="page-header__left">
       <h1 class="page-header__title">Vue d'ensemble</h1>
@@ -22,20 +21,45 @@
         </span>
       </div>
     </div>
-    <button class="refresh-btn" (click)="manualRefresh()" title="Rafraîchir">
+    <button class="refresh-btn" (click)="manualRefresh()">
       <i class="pi pi-refresh"></i>
       <span>Rafraîchir</span>
     </button>
   </div>
 
-  <!-- Stats Cards -->
+  <!-- Alertes en direct -->
+  <div class="alerts-panel" *ngIf="alertsData?.alerts?.length">
+    <div class="alerts-toggle" (click)="showAlertsPanel = !showAlertsPanel">
+      <span class="alerts-toggle__icon">🔔</span>
+      <span class="alerts-toggle__text">
+        Alertes
+        <span class="alerts-toggle__count">({{ alertsData.summary.total }})</span>
+      </span>
+      <span class="alerts-toggle__badges">
+        <span class="alerts-badge alerts-badge--critical">{{ alertsData.summary.critical }}</span>
+        <span class="alerts-badge alerts-badge--warning">{{ alertsData.summary.warning }}</span>
+        <span class="alerts-badge alerts-badge--info">{{ alertsData.summary.info }}</span>
+      </span>
+      <i class="pi" [class.pi-chevron-down]="!showAlertsPanel" [class.pi-chevron-up]="showAlertsPanel"></i>
+    </div>
+    <div class="alerts-body" *ngIf="showAlertsPanel">
+      <p-scrollPanel [style]="{width: '100%', height: '180px'}">
+        <div class="alert-item" *ngFor="let alert of alertsData.alerts">
+          <p-tag [value]="alert.labels.severity || 'info'" [severity]="getAlertSeverity(alert.labels.severity)"></p-tag>
+          <span class="alert-summary">{{ alert.annotations?.summary || alert.labels?.alertname || 'Alerte' }}</span>
+          <span class="alert-time">{{ alert.startsAt | date:'HH:mm' }}</span>
+        </div>
+        <div *ngIf="alertsData.alerts.length === 0" class="empty-alerts">✅ Aucune alerte active</div>
+      </p-scrollPanel>
+    </div>
+  </div>
+
+  <!-- Stats -->
   <div class="stats-grid">
 
     <div class="stat-card stat-card--blue clickable" (click)="navigateTo('/projects')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-folder"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-folder"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ projects.length }}</div>
         <div class="stat-label">Projets</div>
@@ -45,9 +69,7 @@
 
     <div class="stat-card stat-card--green clickable" (click)="navigateTo('/cluster')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-box"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-box"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ runningPods }}</div>
         <div class="stat-label">Pods Running</div>
@@ -57,9 +79,7 @@
 
     <div class="stat-card stat-card--purple clickable" (click)="navigateTo('/cluster')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-server"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-server"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ readyNodes }}</div>
         <div class="stat-label">Nœuds Ready</div>
@@ -72,9 +92,7 @@
          [class.stat-card--gray]="failedPods === 0"
          (click)="navigateTo('/cluster')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-exclamation-triangle"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-exclamation-triangle"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ failedPods }}</div>
         <div class="stat-label">Pods en erreur</div>
@@ -82,12 +100,9 @@
       </div>
     </div>
 
-    <!-- CPU Usage (moyenne cluster) -->
     <div class="stat-card stat-card--cyan clickable" (click)="navigateTo('/cluster')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-chart-line"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-chart-line"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ avgCpuUsage | number:'1.0-1' }}<span class="stat-unit">%</span></div>
         <div class="stat-label">CPU utilisé</div>
@@ -95,12 +110,9 @@
       </div>
     </div>
 
-    <!-- RAM Usage (moyenne cluster) -->
     <div class="stat-card stat-card--indigo clickable" (click)="navigateTo('/cluster')">
       <div class="stat-card__bar"></div>
-      <div class="stat-icon">
-        <i class="pi pi-database"></i>
-      </div>
+      <div class="stat-icon"><i class="pi pi-database"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ avgRamUsage | number:'1.0-1' }}<span class="stat-unit">%</span></div>
         <div class="stat-label">RAM utilisée</div>
@@ -110,10 +122,9 @@
 
   </div>
 
-  <!-- Charts Row -->
+  <!-- Charts -->
   <div class="charts-row">
 
-    <!-- Distribution des Pods -->
     <div class="panel">
       <div class="panel__header">
         <h3 class="panel__title">Distribution des Pods</h3>
@@ -129,12 +140,9 @@
           <div class="donut-label">Total</div>
         </div>
       </div>
-      <div *ngIf="loadingPods" class="loading-state">
-        <i class="pi pi-spin pi-spinner"></i>
-      </div>
+      <div *ngIf="loadingPods" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
     </div>
 
-    <!-- CPU par Nœud -->
     <div class="panel">
       <div class="panel__header">
         <h3 class="panel__title">CPU par Nœud</h3>
@@ -143,12 +151,9 @@
       <div class="chart-wrapper" *ngIf="cpuChartData">
         <p-chart type="bar" [data]="cpuChartData" [options]="cpuChartOptions" height="220px"></p-chart>
       </div>
-      <div *ngIf="loadingNodes" class="loading-state">
-        <i class="pi pi-spin pi-spinner"></i>
-      </div>
+      <div *ngIf="loadingNodes" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
     </div>
 
-    <!-- RAM par Nœud -->
     <div class="panel">
       <div class="panel__header">
         <h3 class="panel__title">RAM par Nœud</h3>
@@ -157,11 +162,30 @@
       <div class="chart-wrapper" *ngIf="ramChartData">
         <p-chart type="bar" [data]="ramChartData" [options]="ramChartOptions" height="220px"></p-chart>
       </div>
-      <div *ngIf="loadingNodes" class="loading-state">
-        <i class="pi pi-spin pi-spinner"></i>
-      </div>
+      <div *ngIf="loadingNodes" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
     </div>
 
+  </div>
+
+  <!-- History Chart -->
+  <div class="panel panel--wide" style="margin-top: 20px;">
+    <div class="panel__header">
+      <h3 class="panel__title">
+        <i class="pi pi-chart-line panel__title-icon"></i>
+        Tendance CPU / RAM (5 min)
+      </h3>
+      <span class="live-badge">
+        <span class="live-badge__dot"></span>
+        Historique
+      </span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <p-chart *ngIf="historyChartData" type="line"
+               [data]="historyChartData"
+               [options]="historyChartOptions"
+               height="100%"></p-chart>
+      <div *ngIf="!historyChartData" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+    </div>
   </div>
 
   <!-- Bottom Row -->
@@ -178,21 +202,50 @@
       <div class="node-list">
         <div class="node-item" *ngFor="let node of nodes">
           <div class="node-left">
-            <div class="node-dot" [class.node-dot--ready]="node.status === 'Ready'" [class.node-dot--error]="node.status !== 'Ready'"></div>
+            <div class="node-dot"
+                 [class.node-dot--ready]="node.status === 'Ready'"
+                 [class.node-dot--error]="node.status !== 'Ready'">
+            </div>
             <div>
               <div class="node-name">{{ node.name }}</div>
               <div class="node-role">{{ node.roles?.join(', ') || 'worker' }}</div>
             </div>
           </div>
           <div class="node-right">
-            <span class="node-badge node-badge--cpu">
-              {{ getNodeUsage(node).cpuUsage?.toFixed(1) || '—' }}% 
-              <span style="opacity:0.6">/ {{ node.cpu }} cores</span>
-            </span>
-            <span class="node-badge node-badge--ram">
-              {{ getNodeUsage(node).ramUsage?.toFixed(1) || '—' }}% 
-              <span style="opacity:0.6">/ {{ getNodeRamGB(node) }} GB</span>
-            </span>
+            <!-- Jauge CPU -->
+            <div class="mini-gauge" [title]="'CPU ' + (getNodeUsage(node).cpuUsage?.toFixed(1) || '—') + '%'">
+              <svg viewBox="0 0 36 36" class="mini-gauge__svg">
+                <path class="mini-gauge__bg"
+                      d="M18 2.0845
+                         a 15.9155 15.9155 0 0 1 0 31.831
+                         a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="mini-gauge__fill mini-gauge__fill--cyan"
+                      [attr.stroke-dasharray]="(getNodeUsage(node).cpuUsage || 0) + ', 100'"
+                      d="M18 2.0845
+                         a 15.9155 15.9155 0 0 1 0 31.831
+                         a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <text x="18" y="20.5" class="mini-gauge__text">{{ getNodeUsage(node).cpuUsage?.toFixed(0) || '—' }}%</text>
+              </svg>
+              <span class="mini-gauge__label">CPU</span>
+            </div>
+
+            <!-- Jauge RAM -->
+            <div class="mini-gauge" [title]="'RAM ' + (getNodeUsage(node).ramUsage?.toFixed(1) || '—') + '%'">
+              <svg viewBox="0 0 36 36" class="mini-gauge__svg">
+                <path class="mini-gauge__bg"
+                      d="M18 2.0845
+                         a 15.9155 15.9155 0 0 1 0 31.831
+                         a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="mini-gauge__fill mini-gauge__fill--purple"
+                      [attr.stroke-dasharray]="(getNodeUsage(node).ramUsage || 0) + ', 100'"
+                      d="M18 2.0845
+                         a 15.9155 15.9155 0 0 1 0 31.831
+                         a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <text x="18" y="20.5" class="mini-gauge__text">{{ getNodeUsage(node).ramUsage?.toFixed(0) || '—' }}%</text>
+              </svg>
+              <span class="mini-gauge__label">RAM</span>
+            </div>
+
             <p-tag [value]="node.status" [severity]="getNodeSeverity(node.status)"></p-tag>
           </div>
         </div>
@@ -210,7 +263,8 @@
         <a routerLink="/cluster" class="see-all">Voir tout →</a>
       </div>
       <div class="filter-row">
-        <input type="text" placeholder="Rechercher un pod..." [(ngModel)]="podSearch" class="filter-input" />
+        <input type="text" placeholder="Rechercher un pod..."
+               [(ngModel)]="podSearch" class="filter-input" />
         <select [(ngModel)]="podStatusFilter" class="filter-select">
           <option value="">Tous les statuts</option>
           <option value="Running">Running</option>
@@ -220,9 +274,11 @@
       </div>
       <div class="pod-list">
         <div class="pod-item" *ngFor="let pod of filteredPods.slice(0, 8)">
-          <div class="pod-dot" [class.pod-dot--running]="pod.status === 'Running'"
-                               [class.pod-dot--pending]="pod.status === 'Pending'"
-                               [class.pod-dot--failed]="pod.status === 'Failed'"></div>
+          <div class="pod-dot"
+               [class.pod-dot--running]="pod.status === 'Running'"
+               [class.pod-dot--pending]="pod.status === 'Pending'"
+               [class.pod-dot--failed]="pod.status === 'Failed'">
+          </div>
           <div class="pod-info">
             <div class="pod-name">{{ pod.name }}</div>
             <div class="pod-ns">{{ pod.namespace }}</div>
@@ -249,10 +305,13 @@
         <a routerLink="/projects" class="see-all">Voir tout →</a>
       </div>
       <div class="filter-row">
-        <input type="text" placeholder="Rechercher un projet..." [(ngModel)]="projectSearch" class="filter-input" />
+        <input type="text" placeholder="Rechercher un projet..."
+               [(ngModel)]="projectSearch" class="filter-input" />
       </div>
       <div class="project-list">
-        <div class="project-item" *ngFor="let project of filteredProjects.slice(0, 5)" (click)="goToProject(project.id)">
+        <div class="project-item"
+             *ngFor="let project of filteredProjects.slice(0, 5)"
+             (click)="goToProject(project.id)">
           <div class="project-avatar">{{ project.name[0].toUpperCase() }}</div>
           <div class="project-info">
             <div class="project-name">{{ project.name }}</div>
@@ -267,25 +326,55 @@
 
   </div>
 
-  <!-- Deployments Row -->
+  <!-- Deployments Timeline -->
   <div class="deployments-row">
     <div class="panel">
       <div class="panel__header">
         <h3 class="panel__title">
-          <i class="pi pi-cloud-upload panel__title-icon"></i>
+          <i class="pi pi-history panel__title-icon"></i>
           Déploiements récents
         </h3>
+        <span class="live-badge">
+          <span class="live-badge__dot"></span>
+          Live
+        </span>
       </div>
-      <div class="deployment-list">
-        <div class="deployment-item" *ngFor="let d of recentDeployments">
-          <div class="deployment-info">
-            <div class="deployment-name">{{ d.name || d.deployment_name || d.metadata?.name || 'Déploiement' }}</div>
-            <div class="deployment-ns">{{ d.namespace || d.k8s_namespace || d.metadata?.namespace || 'N/A' }}</div>
+
+      <div class="timeline">
+        <div class="timeline-line"></div>
+        <div class="timeline-item" *ngFor="let d of recentDeployments; let last = last">
+          <div class="timeline-marker"
+               [class.timeline-marker--success]="d.status === 'success'"
+               [class.timeline-marker--building]="d.status === 'building'"
+               [class.timeline-marker--failed]="d.status === 'failed'">
+            <span class="marker-dot"></span>
+            <span *ngIf="d.status === 'building'" class="marker-pulse"></span>
           </div>
-          <p-tag [value]="d.status || d.phase || 'Inconnu'" [severity]="getStatusSeverity(d.status || d.phase || '')"></p-tag>
+          <div class="timeline-card" [class.timeline-card--last]="last">
+  <div class="timeline-card__header">
+    <span class="deployment-name">{{ d.name }}</span>
+    <p-tag [value]="d.status" [severity]="getDeploymentSeverity(d.status)"></p-tag>
+  </div>
+  <div class="timeline-card__details">
+    <span><i class="pi pi-globe"></i> {{ d.namespace }}</span>
+    <span><i class="pi pi-tag"></i> v{{ d.version }}</span>
+    <span><i class="pi pi-clock"></i> {{ getTimeAgo(d.created_at) }}</span>
+    <span *ngIf="d.finished_at"><i class="pi pi-check-circle"></i> {{ getTimeAgo(d.finished_at) }}</span>
+  </div>
+  <!-- ✅ Barre shimmer à l'intérieur de la carte -->
+  <div *ngIf="d.status === 'building'" class="custom-progress-bar">
+    <div class="custom-progress-bar__fill"></div>
+  </div>
+</div>
+
+        <!-- État vide -->
+        <div *ngIf="!loadingDeployments && recentDeployments.length === 0" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          <p>Aucun déploiement récent</p>
         </div>
-        <div *ngIf="loadingDeployments" class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
-        <div *ngIf="!loadingDeployments && recentDeployments.length === 0" class="empty-state">Aucun déploiement récent</div>
+        <div *ngIf="loadingDeployments" class="loading-state">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
       </div>
     </div>
   </div>

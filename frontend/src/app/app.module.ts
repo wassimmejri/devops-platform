@@ -53,7 +53,9 @@ import { LogsComponent } from './pages/logs/logs.component';
 import { LogsService } from './services/logs.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AlertsComponent } from './pages/alerts/alerts.component';
-
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { TerminalLogsComponent } from './components/terminal-logs/terminal-logs.component';
+import { ScrollPanelModule } from 'primeng/scrollpanel';
 
 
 @NgModule({
@@ -71,7 +73,8 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
     StatusFilterPipe,
     ClusterComponent,
     LogsComponent,
-    AlertsComponent,  
+    AlertsComponent,
+    TerminalLogsComponent,  
 
   ],
   imports: [
@@ -97,9 +100,12 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
     AvatarModule,
     DropdownModule,
     ConfirmDialogModule,
+    ConfirmPopupModule,
     TooltipModule,
     RouterModule,
-    CheckboxModule
+    CheckboxModule,
+    ScrollPanelModule,
+    ProgressBarModule 
 
     
   ],

@@ -45,4 +45,13 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+        # 🚀 Lancement du service de synchronisation Jenkins en arrière-plan
+    import threading
+    import os
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        from app.services.sync_service import sync_jenkins_deployments
+        print("[SYNC] Démarrage du thread de synchronisation des déploiements", flush=True)
+        sync_thread = threading.Thread(target=sync_jenkins_deployments, args=(app,), daemon=True)
+        sync_thread.start()
+
     return app
