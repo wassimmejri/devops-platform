@@ -35,7 +35,13 @@
             <div class="project-card__ns">{{ project.k8s_namespace }}</div>
           </div>
         </div>
-        <button class="project-card__delete" (click)="deleteProject($event, project.id)">
+
+        <!-- ✅ Visible uniquement pour admin-devops -->
+        <button
+          *ngIf="isAdmin"
+          class="project-card__delete"
+          (click)="deleteProject($event, project.id)"
+          title="Supprimer le projet">
           <i class="pi pi-trash"></i>
         </button>
       </div>

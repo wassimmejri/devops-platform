@@ -56,6 +56,8 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TerminalLogsComponent } from './components/terminal-logs/terminal-logs.component';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { UsersComponent } from './pages/users/users.component';
+import { AdminFilterPipe } from './pipes/admin-filter.pipe';
 
 
 @NgModule({
@@ -74,7 +76,9 @@ import { ScrollPanelModule } from 'primeng/scrollpanel';
     ClusterComponent,
     LogsComponent,
     AlertsComponent,
-    TerminalLogsComponent,  
+    TerminalLogsComponent,
+    UsersComponent,
+    AdminFilterPipe,  
 
   ],
   imports: [

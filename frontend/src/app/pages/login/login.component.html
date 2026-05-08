@@ -2,12 +2,10 @@
 
 <div class="login-page">
 
-  <!-- Animated background grid -->
   <div class="bg-grid"></div>
   <div class="bg-glow bg-glow--green"></div>
   <div class="bg-glow bg-glow--blue"></div>
 
-  <!-- Floating status ticker -->
   <div class="sys-ticker">
     <span class="sys-ticker__dot"></span>
     <span class="sys-ticker__text">All systems operational &nbsp;·&nbsp; Cluster ready &nbsp;·&nbsp; SSO Keycloak</span>
@@ -15,23 +13,107 @@
 
   <div class="login-center">
 
-    <!-- Brand -->
     <div class="brand">
-      <div class="brand__icon">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.6">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
+      <div class="brand__icon" [class.brand__icon--redirecting]="redirecting">
+
+        <svg class="brand-svg" [class.brand-svg--redirecting]="redirecting"
+             width="72" height="72" viewBox="0 0 380 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+          <!-- ── Outer hexagon ── -->
+          <polygon class="hex-outer"
+            points="190,10 366,112 366,314 190,416 14,314 14,112"/>
+
+          <!-- ── Mid hex ring ── -->
+          <polygon class="hex-mid"
+            points="190,38 342,128 342,298 190,390 38,298 38,128"/>
+
+          <!-- ── Inner filled hex ── -->
+          <polygon class="hex-inner"
+            points="190,62 318,135 318,285 190,362 62,285 62,135"/>
+
+          <!-- ── Corner nodes ── -->
+          <circle class="node-dot node-dot--1" cx="190" cy="10"  r="6"/>
+          <circle class="node-dot node-dot--2" cx="366" cy="112" r="6"/>
+          <circle class="node-dot node-dot--3" cx="366" cy="314" r="6"/>
+          <circle class="node-dot node-dot--4" cx="190" cy="416" r="6"/>
+          <circle class="node-dot node-dot--5" cx="14"  cy="314" r="6"/>
+          <circle class="node-dot node-dot--6" cx="14"  cy="112" r="6"/>
+
+          <!-- ── Scan line ── -->
+          <line class="scan-line" x1="62" y1="212" x2="318" y2="212"/>
+
+          <!-- ── Eye almond ── -->
+          <path class="eye-almond"
+            d="M80,212 Q190,118 300,212 Q190,306 80,212 Z"/>
+
+          <!-- ── Iris rings ── -->
+          <circle class="iris-fill"  cx="190" cy="212" r="58"/>
+          <circle class="iris-ring1" cx="190" cy="212" r="52"/>
+          <circle class="iris-ring2" cx="190" cy="212" r="36"/>
+
+          <!-- ── Tick marks ── -->
+          <g class="iris-ticks" stroke="#00e5ff" stroke-width="2" opacity="0.7">
+            <line x1="190" y1="156" x2="190" y2="164"/>
+            <line x1="190" y1="260" x2="190" y2="268"/>
+            <line x1="134" y1="212" x2="142" y2="212"/>
+            <line x1="238" y1="212" x2="246" y2="212"/>
+            <line x1="151" y1="173" x2="157" y2="179"/>
+            <line x1="223" y1="245" x2="229" y2="251"/>
+            <line x1="229" y1="173" x2="223" y2="179"/>
+            <line x1="157" y1="245" x2="151" y2="251"/>
+          </g>
+
+          <!-- ── Pupil ── -->
+          <circle class="pupil-outer" cx="190" cy="212" r="20"/>
+          <circle class="pupil-inner" cx="190" cy="212" r="8"/>
+
+          <!-- ── DEV arc ── -->
+          <g class="arc-dev">
+            <path class="orbit-arc" d="M112,178 A98,56 0 0,1 268,178"/>
+            <text class="arc-label" x="150" y="168">DEV</text>
+          </g>
+
+          <!-- ── OPS arc ── -->
+          <g class="arc-ops">
+            <path class="orbit-arc" d="M268,246 A98,56 0 0,1 112,246"/>
+            <text class="arc-label" x="208" y="268">OPS</text>
+          </g>
+
+          <!-- ── Circuit lines ── -->
+          <polyline class="circuit" points="190,10  190,38"/>
+          <polyline class="circuit" points="366,112 342,128"/>
+          <polyline class="circuit" points="366,314 342,298"/>
+          <polyline class="circuit" points="190,416 190,390"/>
+          <polyline class="circuit" points="14,314  38,298"/>
+          <polyline class="circuit" points="14,112  38,128"/>
+
+          <!-- ── Redirecting overlay : progress arc ── -->
+          <g class="redirect-ring" *ngIf="redirecting">
+            <circle cx="190" cy="212" r="70"
+                    fill="none"
+                    stroke="#00e5ff"
+                    stroke-width="3"
+                    stroke-dasharray="440"
+                    stroke-dashoffset="440"
+                    stroke-linecap="round"
+                    transform="rotate(-90 190 212)"/>
+          </g>
+
         </svg>
+
+        <!-- Badge "Connecting" affiché sous l'icône pendant la redirection -->
+        <div class="redirect-badge" *ngIf="redirecting">
+          <span class="redirect-badge__dot"></span>
+          Connexion...
+        </div>
+
       </div>
-      <h1 class="brand__name">DevBoard</h1>
-      <p class="brand__sub">// ci/cd &nbsp;·&nbsp; monitoring &nbsp;·&nbsp; infrastructure</p>
+
+      <h1 class="brand__name">Dev<span>Board</span></h1>
+      <p class="brand__sub">DevOps · Monitoring · Insights</p>
     </div>
 
-    <!-- Login card -->
-    <div class="login-card">
-
-      <!-- Card top accent line -->
+    <div class="login-card" [class.login-card--redirecting]="redirecting">
       <div class="card-accent"></div>
 
       <div class="card-body">
@@ -58,6 +140,7 @@
             [class.field__input--error]="submitted && !email"
             (keyup.enter)="login()"
             autocomplete="email"
+            [disabled]="redirecting"
           />
           <small *ngIf="submitted && !email" class="field__error">
             <i class="pi pi-exclamation-circle"></i> L'email est requis
@@ -76,17 +159,24 @@
             </label>
             <a href="#" class="field__forgot">Oublié ?</a>
           </div>
-          <input
-            pInputText
-            id="pass-input"
-            type="password"
-            [(ngModel)]="password"
-            placeholder="••••••••••••"
-            class="field__input"
-            [class.field__input--error]="submitted && !password"
-            (keyup.enter)="login()"
-            autocomplete="current-password"
-          />
+          <div class="password-wrapper">
+            <input
+              pInputText
+              id="pass-input"
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              placeholder="••••••••••••"
+              class="field__input"
+              [class.field__input--error]="submitted && !password"
+              (keyup.enter)="login()"
+              autocomplete="current-password"
+              [disabled]="redirecting"
+            />
+            <i class="pi password-toggle-icon"
+               [class.pi-eye]="!showPassword"
+               [class.pi-eye-slash]="showPassword"
+               (click)="togglePasswordVisibility()"></i>
+          </div>
           <small *ngIf="submitted && !password" class="field__error">
             <i class="pi pi-exclamation-circle"></i> Le mot de passe est requis
           </small>
@@ -94,7 +184,7 @@
 
         <!-- Remember me -->
         <div class="remember-row">
-          <input type="checkbox" id="remember" [(ngModel)]="rememberMe" />
+          <input type="checkbox" id="remember" [(ngModel)]="rememberMe" [disabled]="redirecting"/>
           <label for="remember">Rester connecté</label>
         </div>
 
@@ -102,10 +192,13 @@
         <button
           class="btn-login"
           [class.btn-login--loading]="loading"
+          [class.btn-login--success]="redirecting"
           (click)="login()"
-          [disabled]="loading"
+          [disabled]="loading || redirecting"
+          [attr.aria-busy]="loading || redirecting"
         >
-          <span *ngIf="!loading" class="btn-login__content">
+          <!-- État normal -->
+          <span *ngIf="!loading && !redirecting" class="btn-login__content">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
               <polyline points="10 17 15 12 10 7"/>
@@ -113,19 +206,29 @@
             </svg>
             Se connecter
           </span>
+
+          <!-- État loading (appel API) -->
           <span *ngIf="loading" class="btn-login__content">
             <span class="btn-spinner"></span>
             Authentification...
+          </span>
+
+          <!-- État redirecting (succès → redirection) -->
+          <span *ngIf="redirecting" class="btn-login__content">
+            <svg class="btn-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Redirection en cours...
           </span>
         </button>
 
       </div>
     </div>
 
-    <!-- Terminal hint -->
     <p class="terminal-hint">
       <span class="terminal-hint__prompt">$</span>
-      ssh -i ~/.ssh/id_rsa admin&#64;devboard.io
+      {{ terminalText }}
+      <span class="terminal-hint__cursor"></span>
     </p>
 
   </div>

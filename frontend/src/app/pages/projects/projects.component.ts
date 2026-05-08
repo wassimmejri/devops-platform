@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../services/project.service';
+import { AuthService } from '../../services/auth.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
@@ -13,6 +14,7 @@ export class ProjectsComponent implements OnInit {
   projects: any[] = [];
   loading: boolean = false;
   showCreateDialog: boolean = false;
+  isAdmin: boolean = false;
 
   newProject = {
     name: '',
@@ -23,12 +25,14 @@ export class ProjectsComponent implements OnInit {
 
   constructor(
     private projectService: ProjectService,
+    private authService: AuthService,
     private router: Router,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     this.loadProjects();
   }
 
@@ -96,11 +100,12 @@ export class ProjectsComponent implements OnInit {
             });
             this.loadProjects();
           },
-          error: () => {
+          error: (err) => {
+            const msg = err?.error?.message || 'Impossible de supprimer';
             this.messageService.add({
               severity: 'error',
               summary: 'Erreur',
-              detail: 'Impossible de supprimer'
+              detail: msg
             });
           }
         });

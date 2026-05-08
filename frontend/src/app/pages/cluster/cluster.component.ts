@@ -4,6 +4,7 @@ import { MetricsService } from '../../services/metrics.service';
 import { SocketService } from '../../services/socket.service';
 import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';   // ← import ajouté
 
 @Component({
   selector: 'app-cluster',
@@ -34,15 +35,21 @@ export class ClusterComponent implements OnInit, OnDestroy {
   private metricsSub?: Subscription;
   private podsSub?: Subscription;
 
+  // ── RBAC ──
+  isAdmin = false;
+
   constructor(
     private k8sService: K8sService,
     private metricsService: MetricsService,
     private socketService: SocketService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService   // ← injection
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();   // ← initialisation RBAC
+
     this.loadNodes();
     this.loadNodeMetrics();
     this.loadPods();

@@ -92,9 +92,9 @@
             <span style="opacity:0.6">/ {{ node.cpu }} cores</span>
           </span>
           <span class="node-badge node-badge--ram">
-  {{ getNodeUsage(node).ramUsage?.toFixed(1) || '—' }}% 
-  <span style="opacity:0.6">/ {{ getNodeRamGB(node) }} GB</span>
-</span>
+            {{ getNodeUsage(node).ramUsage?.toFixed(1) || '—' }}% 
+            <span style="opacity:0.6">/ {{ getNodeRamGB(node) }} GB</span>
+          </span>
           <p-tag [value]="node.status" [severity]="getNodeSeverity(node.status)"></p-tag>
         </div>
       </div>
@@ -144,7 +144,8 @@
           <button class="pod-action" (click)="viewLogs(pod)" title="Voir les logs">
             <i class="pi pi-align-left"></i>
           </button>
-          <button class="pod-action" (click)="restartPod(pod)" title="Redémarrer">
+          <!-- Bouton redémarrage réservé admin -->
+          <button *ngIf="isAdmin" class="pod-action" (click)="restartPod(pod)" title="Redémarrer">
             <i class="pi pi-refresh"></i>
           </button>
         </div>

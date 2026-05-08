@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.utils.auth_decorator import keycloak_required
+from app.utils.auth_decorator import keycloak_required, role_required
 from kubernetes import client, config
 import os
 
@@ -21,13 +21,13 @@ def get_pods(namespace):
         result = []
         for pod in pods.items:
             result.append({
-                'name': pod.metadata.name,
-                'namespace': pod.metadata.namespace,
-                'status': pod.status.phase,
-                'ready': all(c.ready for c in (pod.status.container_statuses or [])),
-                'restarts': sum(c.restart_count for c in (pod.status.container_statuses or [])),
-                'node': pod.spec.node_name,
-                'ip': pod.status.pod_ip,
+                'name':       pod.metadata.name,
+                'namespace':  pod.metadata.namespace,
+                'status':     pod.status.phase,
+                'ready':      all(c.ready for c in (pod.status.container_statuses or [])),
+                'restarts':   sum(c.restart_count for c in (pod.status.container_statuses or [])),
+                'node':       pod.spec.node_name,
+                'ip':         pod.status.pod_ip,
                 'created_at': str(pod.metadata.creation_timestamp)
             })
         return jsonify(result), 200
@@ -43,13 +43,13 @@ def get_all_pods():
         result = []
         for pod in pods.items:
             result.append({
-                'name': pod.metadata.name,
-                'namespace': pod.metadata.namespace,
-                'status': pod.status.phase,
-                'ready': all(c.ready for c in (pod.status.container_statuses or [])),
-                'restarts': sum(c.restart_count for c in (pod.status.container_statuses or [])),
-                'node': pod.spec.node_name,
-                'ip': pod.status.pod_ip,
+                'name':       pod.metadata.name,
+                'namespace':  pod.metadata.namespace,
+                'status':     pod.status.phase,
+                'ready':      all(c.ready for c in (pod.status.container_statuses or [])),
+                'restarts':   sum(c.restart_count for c in (pod.status.container_statuses or [])),
+                'node':       pod.spec.node_name,
+                'ip':         pod.status.pod_ip,
                 'created_at': str(pod.metadata.creation_timestamp)
             })
         return jsonify(result), 200
@@ -62,16 +62,16 @@ def get_pod_logs(namespace, pod_name):
     try:
         core_v1, _ = get_k8s_client()
         logs = core_v1.read_namespaced_pod_log(
-            name=pod_name,
-            namespace=namespace,
-            tail_lines=100
+            name=pod_name, namespace=namespace, tail_lines=100
         )
         return jsonify({'pod': pod_name, 'namespace': namespace, 'logs': logs}), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
+# ── Restart — admin-devops uniquement ────────────────
 @k8s_bp.route('/pods/<namespace>/<pod_name>/restart', methods=['POST'])
 @keycloak_required
+@role_required('admin-devops')
 def restart_pod(namespace, pod_name):
     try:
         core_v1, _ = get_k8s_client()
@@ -80,16 +80,17 @@ def restart_pod(namespace, pod_name):
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
+# ── Scale — admin-devops uniquement ──────────────────
 @k8s_bp.route('/deployments/<namespace>/<deployment_name>/scale', methods=['POST'])
 @keycloak_required
+@role_required('admin-devops')
 def scale_deployment(namespace, deployment_name):
     try:
-        data = request.get_json()
+        data     = request.get_json()
         replicas = data.get('replicas', 1)
         _, apps_v1 = get_k8s_client()
         apps_v1.patch_namespaced_deployment_scale(
-            name=deployment_name,
-            namespace=namespace,
+            name=deployment_name, namespace=namespace,
             body={'spec': {'replicas': replicas}}
         )
         return jsonify({'message': f'Déploiement {deployment_name} scalé à {replicas} replicas'}), 200
@@ -105,45 +106,41 @@ def get_deployments(namespace):
         result = []
         for d in deployments.items:
             result.append({
-                'name': d.metadata.name,
-                'namespace': d.metadata.namespace,
-                'replicas': d.spec.replicas,
-                'ready_replicas': d.status.ready_replicas or 0,
-                'available_replicas': d.status.available_replicas or 0,
-                'created_at': str(d.metadata.creation_timestamp)
+                'name':                d.metadata.name,
+                'namespace':           d.metadata.namespace,
+                'replicas':            d.spec.replicas,
+                'ready_replicas':      d.status.ready_replicas or 0,
+                'available_replicas':  d.status.available_replicas or 0,
+                'created_at':          str(d.metadata.creation_timestamp)
             })
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
+
 @k8s_bp.route('/nodes', methods=['GET'])
 @keycloak_required
 def get_nodes():
     try:
         core_v1, _ = get_k8s_client()
-        nodes = core_v1.list_node()
+        nodes  = core_v1.list_node()
         result = []
         for node in nodes.items:
-            conditions = {c.type: c.status for c in node.status.conditions}
-            # Récupérer l'adresse IP interne
+            conditions  = {c.type: c.status for c in node.status.conditions}
             internal_ip = None
             for addr in node.status.addresses or []:
                 if addr.type == 'InternalIP':
                     internal_ip = addr.address
                     break
             result.append({
-                'name': node.metadata.name,
-                'status': 'Ready' if conditions.get('Ready') == 'True' else 'NotReady',
-                'roles': [
-                    k.replace('node-role.kubernetes.io/', '')
-                    for k in node.metadata.labels.keys()
-                    if 'node-role.kubernetes.io/' in k
-                ],
-                'cpu': node.status.capacity.get('cpu'),
-                'memory': node.status.capacity.get('memory'),
-                'os': node.status.node_info.os_image,
-                'kernel': node.status.node_info.kernel_version,
+                'name':              node.metadata.name,
+                'status':            'Ready' if conditions.get('Ready') == 'True' else 'NotReady',
+                'roles':             [k.replace('node-role.kubernetes.io/', '') for k in node.metadata.labels.keys() if 'node-role.kubernetes.io/' in k],
+                'cpu':               node.status.capacity.get('cpu'),
+                'memory':            node.status.capacity.get('memory'),
+                'os':                node.status.node_info.os_image,
+                'kernel':            node.status.node_info.kernel_version,
                 'container_runtime': node.status.node_info.container_runtime_version,
-                'ip': internal_ip   # <-- NOUVEAU
+                'ip':                internal_ip
             })
         return jsonify(result), 200
     except Exception as e:

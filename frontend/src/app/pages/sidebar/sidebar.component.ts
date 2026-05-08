@@ -11,6 +11,7 @@ import { ConfirmationService } from 'primeng/api';
 export class SidebarComponent implements OnInit {
 
   collapsed: boolean = false;
+  isAdmin: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -23,6 +24,7 @@ export class SidebarComponent implements OnInit {
     if (saved !== null) {
       this.collapsed = saved === 'true';
     }
+    this.isAdmin = this.authService.isAdmin();
   }
 
   toggleCollapse(): void {

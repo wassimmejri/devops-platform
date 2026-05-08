@@ -21,4 +21,8 @@ export class LogsService {
       params: { limit: limit.toString() }
     });
   }
+
+  getAccessibleNamespaces() {
+  return this.http.get<any>(`${this.apiUrl}/logs/namespaces`);
+}
 }

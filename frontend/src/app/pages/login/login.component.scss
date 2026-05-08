@@ -40,6 +40,7 @@
   filter: blur(100px);
   pointer-events: none;
   z-index: 0;
+  transform: translateZ(0);
 
   &--green {
     width: 600px; height: 600px;
@@ -105,23 +106,35 @@
 .brand {
   text-align: center;
   margin-bottom: 2rem;
+  animation: fadeSlideDown 0.6s ease both;
 
   &__icon {
+    position: relative;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 58px; height: 58px;
+    width: 80px;
+    height: 80px;
     @include glass-surface(0.60, 10px);
     border-color: rgba(0, 180, 255, 0.28);
-    border-radius: 14px;
+    border-radius: 18px;
     margin-bottom: 1rem;
-    transition: border-color 0.3s, box-shadow 0.3s;
-
-    svg stroke { color: $cyan-mid; }
+    transition: border-color 0.4s, box-shadow 0.4s;
 
     &:hover {
       border-color: $border-bright;
       @include cyan-glow(0.22);
+    }
+
+    // ── Redirecting : border s'embrase ──
+    &--redirecting {
+      border-color: rgba(0, 229, 255, 0.70) !important;
+      box-shadow:
+        0 0 0 2px rgba(0, 229, 255, 0.15),
+        0 0 20px rgba(0, 229, 255, 0.30),
+        0 0 40px rgba(0, 180, 255, 0.15) !important;
+      animation: icon-redirecting-pulse 0.8s ease-in-out infinite;
     }
   }
 
@@ -132,7 +145,6 @@
     letter-spacing: -0.8px;
     margin: 0 0 6px;
 
-    // "Dev" blanc, "Board" cyan
     span { color: $cyan-mid; }
   }
 
@@ -146,7 +158,236 @@
 }
 
 // ══════════════════════════════════════════════════════════
-// LOGIN CARD
+// REDIRECT BADGE
+// ══════════════════════════════════════════════════════════
+.redirect-badge {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-family: $mono;
+  font-size: 9px;
+  color: $cyan-bright;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  animation: fadeIn 0.3s ease both;
+
+  &__dot {
+    width: 5px; height: 5px;
+    background: $cyan-bright;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: badge-dot-blink 0.6s ease-in-out infinite;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGO SVG — ELEMENTS & ANIMATIONS
+// ══════════════════════════════════════════════════════════
+.brand-svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 6px rgba(0, 200, 255, 0.25));
+  transition: filter 0.4s;
+
+  // ── Hexagons ──
+  .hex-outer {
+    fill: none;
+    stroke: #00c8ff;
+    stroke-width: 2.5;
+    opacity: 0.9;
+    animation: hex-pulse 3s ease-in-out infinite;
+  }
+
+  .hex-mid {
+    fill: none;
+    stroke: #00c8ff;
+    stroke-width: 1;
+    opacity: 0.35;
+    animation: hex-pulse 3s ease-in-out infinite 0.4s;
+  }
+
+  .hex-inner {
+    fill: #0d1f33;
+    stroke: #00c8ff;
+    stroke-width: 1.8;
+    opacity: 0.9;
+  }
+
+  // ── Corner nodes — staggered glow ──
+  .node-dot {
+    fill: #00e5ff;
+    animation: node-glow 2.4s ease-in-out infinite;
+
+    &--1 { animation-delay: 0s;   }
+    &--2 { animation-delay: 0.4s; }
+    &--3 { animation-delay: 0.8s; }
+    &--4 { animation-delay: 1.2s; }
+    &--5 { animation-delay: 1.6s; }
+    &--6 { animation-delay: 2.0s; }
+  }
+
+  // ── Circuit lines ──
+  .circuit {
+    fill: none;
+    stroke: #00e5ff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.6;
+    animation: circuit-flash 4s ease-in-out infinite;
+  }
+
+  // ── Scan line ──
+  .scan-line {
+    stroke: #00e5ff;
+    stroke-width: 1;
+    opacity: 0;
+    animation: scan 3.5s ease-in-out infinite;
+  }
+
+  // ── Eye almond ──
+  .eye-almond {
+    fill: none;
+    stroke: #00e5ff;
+    stroke-width: 2.5;
+    animation: eye-blink 5s ease-in-out infinite;
+  }
+
+  // ── Iris ──
+  .iris-fill {
+    fill: #00c8ff;
+    opacity: 0.10;
+    animation: iris-breathe 3s ease-in-out infinite;
+  }
+
+  .iris-ring1 {
+    fill: none;
+    stroke: #00e5ff;
+    stroke-width: 2;
+    animation: iris-spin 12s linear infinite;
+    transform-origin: 190px 212px;
+  }
+
+  .iris-ring2 {
+    fill: none;
+    stroke: #00e5ff;
+    stroke-width: 1.5;
+    stroke-dasharray: 8 5;
+    opacity: 0.6;
+    animation: iris-spin-rev 8s linear infinite;
+    transform-origin: 190px 212px;
+  }
+
+  // ── Pupil ──
+  .pupil-outer {
+    fill: #00e5ff;
+    animation: pupil-pulse 2s ease-in-out infinite;
+  }
+
+  .pupil-inner {
+    fill: #0a0f1a;
+  }
+
+  // ── DEV arc ──
+  .arc-dev {
+    transform-origin: 190px 212px;
+    animation: arc-rotate-cw 6s linear infinite;
+  }
+
+  // ── OPS arc ──
+  .arc-ops {
+    transform-origin: 190px 212px;
+    animation: arc-rotate-ccw 6s linear infinite;
+  }
+
+  .orbit-arc {
+    fill: none;
+    stroke: #00c8ff;
+    stroke-width: 2;
+    stroke-dasharray: 10 6;
+    opacity: 0.65;
+  }
+
+  .arc-label {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    fill: #00e5ff;
+    opacity: 0.8;
+    letter-spacing: 2px;
+  }
+
+  // ── Progress ring (redirecting) ──
+  .redirect-ring circle {
+    animation: progress-fill 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// REDIRECTING STATE — accélération de toutes les animations
+// ══════════════════════════════════════════════════════════
+.brand-svg--redirecting {
+
+  // Glow global plus fort
+  filter: drop-shadow(0 0 14px rgba(0, 229, 255, 0.55)) !important;
+
+  // Iris rings x4 plus rapides
+  .iris-ring1 {
+    animation-duration: 1.2s !important;
+  }
+  .iris-ring2 {
+    animation-duration: 0.8s !important;
+    opacity: 1 !important;
+  }
+
+  // Iris fill plus lumineux
+  .iris-fill {
+    animation: iris-breathe-fast 0.5s ease-in-out infinite !important;
+  }
+
+  // Pupil pulse rapide
+  .pupil-outer {
+    animation: pupil-pulse-fast 0.5s ease-in-out infinite !important;
+  }
+
+  // Arcs DEV/OPS x4 plus rapides
+  .arc-dev {
+    animation-duration: 1s !important;
+  }
+  .arc-ops {
+    animation-duration: 1s !important;
+  }
+
+  // Nœuds clignotent en séquence rapide
+  .node-dot {
+    animation: node-glow-fast 0.4s ease-in-out infinite !important;
+  }
+
+  // Hex outer pulse rapide
+  .hex-outer {
+    animation: hex-pulse-fast 0.6s ease-in-out infinite !important;
+  }
+
+  // Scan line rapide
+  .scan-line {
+    animation: scan 0.8s ease-in-out infinite !important;
+    opacity: 0.8;
+  }
+
+  // Circuits clignotent rapidement
+  .circuit {
+    animation: circuit-flash 0.6s ease-in-out infinite !important;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGIN CARD — redirecting state
 // ══════════════════════════════════════════════════════════
 .login-card {
   @include glass-surface(0.80, 22px);
@@ -155,6 +396,14 @@
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(0,0,0,0.5),
               0 0 40px rgba(0,150,255,0.08);
+  animation: fadeSlideUp 0.6s ease 0.2s both;
+  transition: opacity 0.4s, filter 0.4s;
+
+  &--redirecting {
+    opacity: 0.45;
+    filter: blur(0.5px);
+    pointer-events: none;
+  }
 }
 
 .card-accent {
@@ -294,12 +543,11 @@
   font-weight: 700;
   color: $cyan-bright;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.1s;
   letter-spacing: 0.2px;
   position: relative;
   overflow: hidden;
 
-  // Shimmer au hover
   &::before {
     content: '';
     position: absolute;
@@ -324,6 +572,20 @@
     cursor: not-allowed;
   }
 
+  // ── État succès / redirection ──
+  &--success {
+    background: linear-gradient(135deg, rgba(0,229,255,0.20), rgba(0,180,100,0.15)) !important;
+    border-color: rgba(0, 229, 255, 0.60) !important;
+    color: $cyan-bright !important;
+    opacity: 1 !important;
+    cursor: default !important;
+
+    // Shimmer continu pendant la redirection
+    &::before {
+      animation: btn-shimmer 1s ease-in-out infinite !important;
+    }
+  }
+
   &__content {
     display: flex;
     align-items: center;
@@ -332,6 +594,18 @@
     position: relative;
     z-index: 1;
   }
+}
+
+// Checkmark animé dans le bouton succès
+.btn-check {
+  stroke: $cyan-bright;
+  animation: check-draw 0.4s ease both;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+}
+
+@keyframes check-draw {
+  to { stroke-dashoffset: 0; }
 }
 
 .btn-spinner {
@@ -354,12 +628,25 @@
   font-family: $mono;
   font-size: 11px;
   color: $text-dim;
+  animation: fadeIn 0.6s ease 0.4s both;
 
   &__prompt {
     color: $cyan-dim;
     margin-right: 6px;
   }
+
+  &__cursor {
+    display: inline-block;
+    width: 6px;
+    height: 14px;
+    background: $cyan-dim;
+    margin-left: 2px;
+    animation: blink 0.8s step-end infinite;
+    vertical-align: middle;
+  }
 }
+
+@keyframes blink { 50% { opacity: 0; } }
 
 // ══════════════════════════════════════════════════════════
 // FIELD ERROR
@@ -373,6 +660,156 @@
   font-size: 10px;
   color: $status-error;
   i { font-size: 10px; }
+}
+
+// ══════════════════════════════════════════════════════════
+// PASSWORD VISIBILITY TOGGLE
+// ══════════════════════════════════════════════════════════
+.password-wrapper {
+  position: relative;
+
+  .field__input { padding-right: 40px; }
+
+  .password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: $text-dim;
+    font-size: 1rem;
+    transition: color 0.2s;
+    z-index: 2;
+
+    &:hover { color: $cyan-bright; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// KEYFRAMES — LOGO (état normal)
+// ══════════════════════════════════════════════════════════
+@keyframes hex-pulse {
+  0%, 100% { opacity: 0.9; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes node-glow {
+  0%, 100% { r: 6; opacity: 1;   }
+  50%       { r: 9; opacity: 0.4; }
+}
+
+@keyframes circuit-flash {
+  0%, 80%, 100% { opacity: 0.6; }
+  88%            { opacity: 1;   }
+  92%            { opacity: 0.2; }
+}
+
+@keyframes scan {
+  0%   { opacity: 0;   transform: translateY(-80px); }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.5; }
+  100% { opacity: 0;   transform: translateY(80px);  }
+}
+
+@keyframes eye-blink {
+  0%, 90%, 100% { transform: scaleY(1);   }
+  95%            { transform: scaleY(0.1); }
+}
+
+@keyframes iris-breathe {
+  0%, 100% { opacity: 0.10; }
+  50%       { opacity: 0.20; }
+}
+
+@keyframes iris-spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes iris-spin-rev {
+  from { transform: rotate(0deg);    }
+  to   { transform: rotate(-360deg); }
+}
+
+@keyframes pupil-pulse {
+  0%, 100% { r: 20; opacity: 1;   }
+  50%       { r: 24; opacity: 0.8; }
+}
+
+@keyframes arc-rotate-cw {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes arc-rotate-ccw {
+  from { transform: rotate(0deg);    }
+  to   { transform: rotate(-360deg); }
+}
+
+// ── KEYFRAMES — état redirecting (variantes accélérées) ──
+@keyframes iris-breathe-fast {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 0.50; }
+}
+
+@keyframes pupil-pulse-fast {
+  0%, 100% { r: 20; opacity: 1;   }
+  50%       { r: 28; opacity: 0.6; }
+}
+
+@keyframes node-glow-fast {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.2; }
+}
+
+@keyframes hex-pulse-fast {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes icon-redirecting-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(0,229,255,0.15), 0 0 20px rgba(0,229,255,0.30), 0 0 40px rgba(0,180,255,0.15); }
+  50%       { box-shadow: 0 0 0 4px rgba(0,229,255,0.25), 0 0 30px rgba(0,229,255,0.50), 0 0 60px rgba(0,180,255,0.25); }
+}
+
+@keyframes badge-dot-blink {
+  0%, 100% { opacity: 1; transform: scale(1);    }
+  50%       { opacity: 0.3; transform: scale(0.7); }
+}
+
+@keyframes btn-shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%;  }
+}
+
+@keyframes progress-fill {
+  from { stroke-dashoffset: 440; }
+  to   { stroke-dashoffset: 0;   }
+}
+
+// ══════════════════════════════════════════════════════════
+// REDUCED MOTION
+// ══════════════════════════════════════════════════════════
+@media (prefers-reduced-motion: reduce) {
+  .brand-svg * { animation: none !important; }
+  .brand-svg--redirecting * { animation: none !important; }
+  .btn-spinner { animation-duration: 1.5s !important; }
+}
+
+// ══════════════════════════════════════════════════════════
+// ANIMATIONS GÉNÉRIQUES
+// ══════════════════════════════════════════════════════════
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -394,4 +831,13 @@
 
   .p-toast-summary { color: $text-primary !important; font-size: 13px !important; font-family: $display !important; font-weight: 700 !important; }
   .p-toast-detail  { color: $text-muted !important; font-size: 11px !important; }
+}
+
+// ══════════════════════════════════════════════════════════
+// RESPONSIVE
+// ══════════════════════════════════════════════════════════
+@media (max-width: 480px) {
+  .login-center { padding: 0 1rem; }
+  .btn-login { padding: 12px; font-size: 14px; }
+  .brand__icon { width: 68px; height: 68px; }
 }

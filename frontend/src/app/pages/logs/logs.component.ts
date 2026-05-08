@@ -5,6 +5,7 @@ import { LogsService } from '../../services/logs.service';
 import { SocketService } from '../../services/socket.service';
 import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-logs',
@@ -27,6 +28,7 @@ export class LogsComponent implements OnInit, OnDestroy {
 
   wsActive = false;
   private logsSub?: Subscription;
+  isAdmin = false;
 
   autoRefresh = true;
   refreshInterval = 10;
@@ -37,10 +39,12 @@ export class LogsComponent implements OnInit, OnDestroy {
     private k8sService: K8sService,
     private logsService: LogsService,
     private socketService: SocketService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     this.loadNamespaces();
   }
 
@@ -77,7 +81,6 @@ export class LogsComponent implements OnInit, OnDestroy {
     this.wsActive = false;
   }
 
-  // ← méthode publique appelée par le bouton "Arrêter" du template
   stopStreamPublic(): void {
     this.stopStream();
     this.logs = [];
@@ -120,24 +123,20 @@ export class LogsComponent implements OnInit, OnDestroy {
 
   loadNamespaces(): void {
     this.loadingNamespaces = true;
-    this.k8sService.getPods().subscribe({
-      next: (pods: any[]) => {
-        const clusterNamespaces = [...new Set(pods.map(p => p.namespace).filter(Boolean))];
-        this.projectService.getProjects().subscribe({
-          next: (projects: any[]) => {
-            const projectNamespaces = projects.map(p => p.k8s_namespace).filter(Boolean);
-            this.namespaces = [...new Set([...clusterNamespaces, ...projectNamespaces])].sort();
-            this.loadingNamespaces = false;
-          },
-          error: () => {
-            this.namespaces = clusterNamespaces.sort();
-            this.loadingNamespaces = false;
-          }
-        });
+
+    // ✅ Utilise la route backend qui filtre selon le rôle
+    this.logsService.getAccessibleNamespaces().subscribe({
+      next: (data: any) => {
+        this.namespaces = (data.namespaces || []).sort();
+        this.loadingNamespaces = false;
       },
       error: () => {
         this.loadingNamespaces = false;
-        this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les namespaces' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les namespaces'
+        });
       }
     });
   }
@@ -164,7 +163,11 @@ export class LogsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loadingPods = false;
-        this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les pods' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les pods'
+        });
       }
     });
   }
@@ -188,7 +191,11 @@ export class LogsComponent implements OnInit, OnDestroy {
   loadLogs(showToast: boolean = false): void {
     if (!this.selectedNamespace) {
       if (showToast) {
-        this.messageService.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez sélectionner un namespace' });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Attention',
+          detail: 'Veuillez sélectionner un namespace'
+        });
       }
       return;
     }
@@ -210,10 +217,21 @@ export class LogsComponent implements OnInit, OnDestroy {
           this.startAutoRefresh();
         }
       },
-      error: () => {
+      error: (err: any) => {
         this.loadingLogs = false;
-        if (showToast) {
-          this.messageService.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de récupérer les logs' });
+        // ✅ Gère le 403 si le developer tente d'accéder à un namespace non autorisé
+        if (err?.status === 403) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Accès refusé',
+            detail: 'Vous n\'avez pas accès aux logs de ce namespace'
+          });
+        } else if (showToast) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de récupérer les logs'
+          });
         }
       }
     });
@@ -222,21 +240,20 @@ export class LogsComponent implements OnInit, OnDestroy {
   // ── Formatage ─────────────────────────────────────────────────────────────
 
   getLogsText(): string {
-  return this.logs.map((entry: any) => this.formatLogEntry(entry)).join('\n');
-}
+    return this.logs.map((entry: any) => this.formatLogEntry(entry)).join('\n');
+  }
 
-formatLogEntry(entry: any): string {
-  if (entry.ts !== undefined && entry.line !== undefined) {
-    return entry.line;
+  formatLogEntry(entry: any): string {
+    if (entry.ts !== undefined && entry.line !== undefined) {
+      return entry.line;
+    }
+    const ts = entry.timestamp ?? entry.ts;
+    let date: Date;
+    try {
+      date = new Date(Math.floor(Number(BigInt(ts) / BigInt(1_000_000))));
+    } catch {
+      date = new Date();
+    }
+    return `[${date.toLocaleString('fr-TN', { timeZone: 'Africa/Tunis' })}] ${entry.line}`;
   }
-  const ts = entry.timestamp ?? entry.ts;
-  let date: Date;
-  try {
-    date = new Date(Math.floor(Number(BigInt(ts) / BigInt(1_000_000))));
-  } catch {
-    date = new Date();
-  }
-  // toLocaleString avec timezone explicite
-  return `[${date.toLocaleString('fr-TN', { timeZone: 'Africa/Tunis' })}] ${entry.line}`;
-}
 }

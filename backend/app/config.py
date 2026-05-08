@@ -31,3 +31,12 @@ class Config:
 
     # Loki
     LOKI_URL = os.getenv("LOKI_URL", "http://172.25.50.101:3100")
+
+    # Keycloak
+    KEYCLOAK_URL           = os.getenv('KEYCLOAK_URL')
+    KEYCLOAK_REALM         = os.getenv('KEYCLOAK_REALM')
+    KEYCLOAK_CLIENT_ID     = os.getenv('KEYCLOAK_CLIENT_ID')
+    KEYCLOAK_CLIENT_SECRET = os.getenv('KEYCLOAK_CLIENT_SECRET')
+    KEYCLOAK_HOST          = os.getenv('KEYCLOAK_HOST')
+    KEYCLOAK_ADMIN_USER    = os.getenv('KEYCLOAK_ADMIN_USER', 'admin')
+    KEYCLOAK_ADMIN_PASSWORD = os.getenv('KEYCLOAK_ADMIN_PASSWORD', 'admin123')

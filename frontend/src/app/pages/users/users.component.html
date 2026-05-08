@@ -1,0 +1,222 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--purple"></div>
+<div class="bg-glow bg-glow--blue"></div>
+
+<div class="page">
+
+  <!-- ══ HEADER ══ -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <button class="icon-btn" routerLink="/dashboard" title="Retour">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="page-header__titles">
+        <div class="page-header__eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>Keycloak sync</span>
+        </div>
+        <h1 class="page-header__title">Gestion des utilisateurs</h1>
+      </div>
+    </div>
+    <button class="icon-btn" (click)="loadUsers()" title="Rafraîchir">
+      <i class="pi pi-refresh"></i>
+      <span>Rafraîchir</span>
+    </button>
+  </div>
+
+  <!-- ══ STATS ══ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--white"><i class="pi pi-users"></i></div>
+      <div class="stat-card__body">
+        <span class="stat-card__label">Total</span>
+        <span class="stat-card__value">{{ users.length }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--purple"><i class="pi pi-shield"></i></div>
+      <div class="stat-card__body">
+        <span class="stat-card__label">Admins</span>
+        <span class="stat-card__value stat-card__value--purple">{{ users | adminFilter:'admin-devops' }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--cyan"><i class="pi pi-code"></i></div>
+      <div class="stat-card__body">
+        <span class="stat-card__label">Developers</span>
+        <span class="stat-card__value stat-card__value--cyan">{{ users | adminFilter:'developer' }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--red"><i class="pi pi-ban"></i></div>
+      <div class="stat-card__body">
+        <span class="stat-card__label">Suspendus</span>
+        <span class="stat-card__value stat-card__value--red">{{ users | adminFilter:'suspended' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ══ -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-state__spinner"></div>
+    <span class="loading-state__text">Chargement des utilisateurs...</span>
+  </div>
+
+  <!-- ══ PANEL ══ -->
+  <div *ngIf="!loading" class="panel">
+
+    <div class="panel__header">
+      <div class="panel__header-left">
+        <h2 class="panel__title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel__title-icon">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          Utilisateurs
+        </h2>
+        <span class="panel__count">{{ users.length }}</span>
+      </div>
+      <div class="live-badge">
+        <span class="live-badge__dot"></span>
+        Keycloak sync
+      </div>
+    </div>
+
+    <!-- TABLE HEADER -->
+    <div class="table-header">
+      <span class="th-user">Utilisateur</span>
+      <span class="th-role">Rôle</span>
+      <span class="th-status">Statut</span>
+      <span class="th-meta">Projets / Créé le</span>
+      <span class="th-actions">Actions</span>
+    </div>
+
+    <!-- USER ROWS -->
+    <div class="users-list">
+      <div class="user-row"
+           *ngFor="let user of users; let i = index"
+           [class.user-row--suspended]="!user.enabled"
+           [class.user-row--current]="isCurrentUser(user)"
+           [style.animation-delay]="i * 50 + 'ms'">
+
+        <!-- Col 1 : Identité -->
+        <div class="td-user user-identity">
+          <div class="user-avatar" [class.user-avatar--admin]="user.role === 'admin-devops'">
+            {{ getInitials(user) }}
+          </div>
+          <div class="user-identity__text">
+            <div class="user-name">
+              {{ user.first_name }} {{ user.last_name }}
+              <span class="you-badge" *ngIf="isCurrentUser(user)">
+                <i class="pi pi-user" style="font-size:8px"></i>&nbsp;vous
+              </span>
+            </div>
+            <div class="user-email">{{ user.email }}</div>
+          </div>
+        </div>
+
+        <!-- Col 2 : Rôle -->
+        <div class="td-role">
+          <p-dropdown
+            *ngIf="!isCurrentUser(user)"
+            [options]="roleOptions"
+            [ngModel]="user.role"
+            (ngModelChange)="changeRole(user, $event)"
+            styleClass="role-dropdown"
+            appendTo="body">
+          </p-dropdown>
+          <span *ngIf="isCurrentUser(user)"
+                class="role-static"
+                [class.role-static--admin]="user.role === 'admin-devops'"
+                [class.role-static--dev]="user.role !== 'admin-devops'">
+            <i class="pi" [class.pi-shield]="user.role === 'admin-devops'" [class.pi-code]="user.role !== 'admin-devops'"></i>
+            {{ user.role === 'admin-devops' ? 'Admin DevOps' : 'Developer' }}
+          </span>
+        </div>
+
+        <!-- Col 3 : Statut -->
+        <div class="td-status">
+          <span class="status-pill"
+                [class.status-pill--active]="user.enabled"
+                [class.status-pill--suspended]="!user.enabled">
+            <span class="status-pill__dot"></span>
+            {{ user.enabled ? 'Actif' : 'Suspendu' }}
+          </span>
+        </div>
+
+        <!-- Col 4 : Meta -->
+        <div class="td-meta">
+          <span class="meta-item">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+            </svg>
+            {{ user.projects_count }} projet(s)
+          </span>
+          <span class="meta-item">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            {{ getCreatedAt(user.created_at) }}
+          </span>
+        </div>
+
+        <!-- Col 5 : Actions -->
+        <div class="td-actions">
+
+          <!-- Actions normales -->
+          <div class="action-group" *ngIf="!isCurrentUser(user)">
+            <button class="action-btn"
+                    [class.action-btn--warn]="user.enabled"
+                    [class.action-btn--success]="!user.enabled"
+                    (click)="toggleStatus(user)"
+                    [title]="user.enabled ? 'Suspendre' : 'Activer'">
+              <i class="pi" [class.pi-ban]="user.enabled" [class.pi-check-circle]="!user.enabled"></i>
+            </button>
+            <button class="action-btn action-btn--info"
+                    (click)="resetPassword(user)"
+                    title="Réinitialiser le mot de passe">
+              <i class="pi pi-key"></i>
+            </button>
+            <button class="action-btn action-btn--danger"
+                    (click)="deleteUser(user)"
+                    title="Supprimer l'utilisateur">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+
+          <!-- Compte courant : cadenas visible -->
+          <div class="locked-chip" *ngIf="isCurrentUser(user)">
+            <i class="pi pi-lock"></i>
+            <span>protégé</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="users.length === 0" class="empty-state">
+        <div class="empty-state__icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <p class="empty-state__text">Aucun utilisateur trouvé</p>
+        <button class="icon-btn" (click)="loadUsers()">
+          <i class="pi pi-refresh"></i><span>Réessayer</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

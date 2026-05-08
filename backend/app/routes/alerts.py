@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.utils.auth_decorator import keycloak_required
+from app.utils.auth_decorator import keycloak_required, role_required
 from app.services.alertmanager_service import get_alerts, get_alert_groups, silence_alert
 
 alerts_bp = Blueprint('alerts', __name__)
@@ -8,8 +8,7 @@ alerts_bp = Blueprint('alerts', __name__)
 @keycloak_required
 def list_alerts():
     try:
-        alerts = get_alerts()
-        return jsonify(alerts), 200
+        return jsonify(get_alerts()), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
@@ -17,22 +16,24 @@ def list_alerts():
 @keycloak_required
 def list_alert_groups():
     try:
-        groups = get_alert_groups()
-        return jsonify(groups), 200
+        return jsonify(get_alert_groups()), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
+# ── Silence — admin-devops uniquement ────────────────
 @alerts_bp.route('/silence', methods=['POST'])
 @keycloak_required
+@role_required('admin-devops')
 def create_silence():
     try:
         data       = request.json
-        matchers   = data.get('matchers', [])
-        created_by = data.get('createdBy', 'devops-platform')
-        comment    = data.get('comment', '')
-        starts_at  = data.get('startsAt')
-        ends_at    = data.get('endsAt')
-        result = silence_alert(matchers, created_by, comment, starts_at, ends_at)
+        result     = silence_alert(
+            data.get('matchers', []),
+            data.get('createdBy', 'devops-platform'),
+            data.get('comment', ''),
+            data.get('startsAt'),
+            data.get('endsAt')
+        )
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500

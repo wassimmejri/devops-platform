@@ -27,6 +27,9 @@ def create_app():
     from app.routes.metrics import metrics_bp
     from app.routes.logs import logs_bp
     from app.routes.alerts import alerts_bp
+    from app.routes.admin import admin_bp
+    from app.models.audit import AuditLog
+
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(projects_bp, url_prefix='/api/projects')
@@ -36,6 +39,8 @@ def create_app():
     app.register_blueprint(metrics_bp, url_prefix='/api/metrics')
     app.register_blueprint(logs_bp, url_prefix='/api/logs')
     app.register_blueprint(alerts_bp, url_prefix='/api/alerts')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+
 
 
     # Sockets                          ← AJOUT

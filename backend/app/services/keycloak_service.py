@@ -1,7 +1,10 @@
 import requests
 import os
+import time
 import jwt as pyjwt
 from jwt import PyJWKClient
+from datetime import timezone as tz
+
 
 def get_keycloak_base_url():
     return f"{os.getenv('KEYCLOAK_URL')}/realms/{os.getenv('KEYCLOAK_REALM')}/protocol/openid-connect"
@@ -74,7 +77,6 @@ def verify_token(token):
                 break
 
         if not rsa_key:
-            # Si pas de kid match, prendre la première clé RSA
             for key in jwks_data.get('keys', []):
                 if key.get('kty') == 'RSA':
                     rsa_key = RSAAlgorithm.from_jwk(key)
@@ -84,22 +86,40 @@ def verify_token(token):
             print("[ERROR] No RSA key found in JWKS")
             return None
 
+        # ── DEBUG timestamps ──────────────────────────────────────────────
+        unverified = pyjwt.decode(token, options={
+            "verify_signature": False,
+            "verify_exp":       False,
+            "verify_iat":       False,
+        })
+        now = int(time.time())
+        iat = unverified.get('iat', 0)
+        exp = unverified.get('exp', 0)
+        print(f"[DEBUG TIME] now={now}, iat={iat}, exp={exp}, "
+              f"iat_diff={now - iat}s, exp_diff={exp - now}s")
+        # ─────────────────────────────────────────────────────────────────
+
         # Décoder le token avec la clé publique
         payload = pyjwt.decode(
             token,
             rsa_key,
             algorithms=["RS256"],
-            options={"verify_aud": False}
+            options={
+                "verify_aud": False,
+                "verify_iat": False,    # ← désactiver vérification iat
+                "verify_exp": True,     # ← garder vérification expiration
+                "leeway":     120       # ← 2 minutes de tolérance sur exp
+            }
         )
 
         print(f"[DEBUG] Token valid for user: {payload.get('preferred_username')}")
 
         return {
-            'sub': payload.get('sub'),
-            'email': payload.get('email', ''),
-            'name': payload.get('name', payload.get('preferred_username', '')),
+            'sub':                payload.get('sub'),
+            'email':              payload.get('email', ''),
+            'name':               payload.get('name', payload.get('preferred_username', '')),
             'preferred_username': payload.get('preferred_username', ''),
-            'roles': payload.get('realm_access', {}).get('roles', [])
+            'roles':              payload.get('realm_access', {}).get('roles', [])
         }
 
     except pyjwt.ExpiredSignatureError:
